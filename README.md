@@ -1,5 +1,7 @@
 # Genny
 
+[![Test](https://github.com/benbristow/genny/actions/workflows/test.yml/badge.svg)](https://github.com/benbristow/genny/actions/workflows/test.yml)
+
 A static site generator built with .NET that transforms your HTML pages and assets into a production-ready website.
 
 ## Features
