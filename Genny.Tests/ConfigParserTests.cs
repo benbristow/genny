@@ -24,14 +24,17 @@ public class ConfigParserTests
             Directory.SetCurrentDirectory(tempDir);
             
             // Act
-            var config = await ConfigParser.ParseConfig();
+            using (TestHelpers.SuppressConsoleOutput())
+            {
+                var config = await ConfigParser.ParseConfig();
 
-            // Assert
-            config.ShouldNotBeNull();
-            config.Name.ShouldBe("Test Site");
-            config.Description.ShouldBe("A test site");
-            config.RootDirectory.ShouldBe(tempDir);
-            config.OutputDirectory.ShouldBe(Path.Combine(tempDir, "build"));
+                // Assert
+                config.ShouldNotBeNull();
+                config.Name.ShouldBe("Test Site");
+                config.Description.ShouldBe("A test site");
+                config.RootDirectory.ShouldBe(tempDir);
+                config.OutputDirectory.ShouldBe(Path.Combine(tempDir, "build"));
+            }
         }
         finally
         {
@@ -57,10 +60,13 @@ public class ConfigParserTests
             Directory.SetCurrentDirectory(tempDir);
             
             // Act
-            var config = await ConfigParser.ParseConfig();
+            using (TestHelpers.SuppressConsoleOutput())
+            {
+                var config = await ConfigParser.ParseConfig();
 
-            // Assert
-            config.ShouldBeNull();
+                // Assert
+                config.ShouldBeNull();
+            }
         }
         finally
         {
@@ -86,12 +92,15 @@ public class ConfigParserTests
             Directory.SetCurrentDirectory(tempDir);
             
             // Act
-            var config = await ConfigParser.ParseConfig();
+            using (TestHelpers.SuppressConsoleOutput())
+            {
+                var config = await ConfigParser.ParseConfig();
 
-            // Assert
-            config.ShouldNotBeNull();
-            config.Name.ShouldBe("Partial Site");
-            config.Description.ShouldBe(string.Empty);
+                // Assert
+                config.ShouldNotBeNull();
+                config.Name.ShouldBe("Partial Site");
+                config.Description.ShouldBe(string.Empty);
+            }
         }
         finally
         {
@@ -113,10 +122,13 @@ public class ConfigParserTests
             Directory.SetCurrentDirectory(tempDir);
             
             // Act
-            var config = await ConfigParser.ParseConfig();
+            using (TestHelpers.SuppressConsoleOutput())
+            {
+                var config = await ConfigParser.ParseConfig();
 
-            // Assert
-            config.ShouldBeNull();
+                // Assert
+                config.ShouldBeNull();
+            }
         }
         finally
         {

@@ -30,7 +30,10 @@ public class SiteGeneratorTests
         try
         {
             // Act
-            await SiteGenerator.GenerateSiteAsync(siteConfig);
+            using (TestHelpers.SuppressConsoleOutput())
+            {
+                await SiteGenerator.GenerateSiteAsync(siteConfig);
+            }
 
             // Assert
             var buildDir = siteConfig.OutputDirectory;
@@ -77,7 +80,10 @@ public class SiteGeneratorTests
         try
         {
             // Act
-            await SiteGenerator.GenerateSiteAsync(siteConfig);
+            using (TestHelpers.SuppressConsoleOutput())
+            {
+                await SiteGenerator.GenerateSiteAsync(siteConfig);
+            }
 
             // Assert
             var buildDir = siteConfig.OutputDirectory;
@@ -115,7 +121,10 @@ public class SiteGeneratorTests
         try
         {
             // Act
-            await SiteGenerator.GenerateSiteAsync(siteConfig);
+            using (TestHelpers.SuppressConsoleOutput())
+            {
+                await SiteGenerator.GenerateSiteAsync(siteConfig);
+            }
 
             // Assert
             var buildDir = siteConfig.OutputDirectory;
@@ -156,7 +165,10 @@ public class SiteGeneratorTests
         try
         {
             // Act
-            await SiteGenerator.GenerateSiteAsync(siteConfig);
+            using (TestHelpers.SuppressConsoleOutput())
+            {
+                await SiteGenerator.GenerateSiteAsync(siteConfig);
+            }
 
             // Assert
             var buildDir = siteConfig.OutputDirectory;
@@ -201,7 +213,10 @@ public class SiteGeneratorTests
         try
         {
             // Act
-            await SiteGenerator.GenerateSiteAsync(siteConfig);
+            using (TestHelpers.SuppressConsoleOutput())
+            {
+                await SiteGenerator.GenerateSiteAsync(siteConfig);
+            }
 
             // Assert
             var buildDir = siteConfig.OutputDirectory;
@@ -244,7 +259,10 @@ public class SiteGeneratorTests
         try
         {
             // Act
-            await SiteGenerator.GenerateSiteAsync(siteConfig);
+            using (TestHelpers.SuppressConsoleOutput())
+            {
+                await SiteGenerator.GenerateSiteAsync(siteConfig);
+            }
 
             // Assert
             File.Exists(oldFile).ShouldBeFalse();
@@ -274,7 +292,10 @@ public class SiteGeneratorTests
         try
         {
             // Act & Assert
-            await Should.NotThrowAsync(async () => await SiteGenerator.GenerateSiteAsync(siteConfig));
+            using (TestHelpers.SuppressConsoleOutput())
+            {
+                await Should.NotThrowAsync(async () => await SiteGenerator.GenerateSiteAsync(siteConfig));
+            }
             
             Directory.Exists(siteConfig.OutputDirectory).ShouldBeTrue();
         }
@@ -310,7 +331,10 @@ public class SiteGeneratorTests
         try
         {
             // Act
-            await SiteGenerator.GenerateSiteAsync(siteConfig);
+            using (TestHelpers.SuppressConsoleOutput())
+            {
+                await SiteGenerator.GenerateSiteAsync(siteConfig);
+            }
 
             // Assert
             var buildDir = siteConfig.OutputDirectory;
@@ -358,7 +382,10 @@ public class SiteGeneratorTests
         try
         {
             // Act
-            await SiteGenerator.GenerateSiteAsync(siteConfig);
+            using (TestHelpers.SuppressConsoleOutput())
+            {
+                await SiteGenerator.GenerateSiteAsync(siteConfig);
+            }
 
             // Assert
             var buildDir = siteConfig.OutputDirectory;
@@ -398,7 +425,10 @@ public class SiteGeneratorTests
         try
         {
             // Act
-            await SiteGenerator.GenerateSiteAsync(siteConfig);
+            using (TestHelpers.SuppressConsoleOutput())
+            {
+                await SiteGenerator.GenerateSiteAsync(siteConfig);
+            }
 
             // Assert
             var buildDir = siteConfig.OutputDirectory;
@@ -440,7 +470,10 @@ public class SiteGeneratorTests
         try
         {
             // Act
-            await SiteGenerator.GenerateSiteAsync(siteConfig);
+            using (TestHelpers.SuppressConsoleOutput())
+            {
+                await SiteGenerator.GenerateSiteAsync(siteConfig);
+            }
 
             // Assert
             var buildDir = siteConfig.OutputDirectory;
