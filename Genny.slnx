@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Genny.Tests/Genny.Tests.csproj" />
+  <Project Path="Genny/Genny.csproj" />
+</Solution>
