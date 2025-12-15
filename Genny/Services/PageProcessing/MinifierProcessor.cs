@@ -30,17 +30,17 @@ public class MinifierProcessor : IPageProcessor
                 var newSize = result.MinifiedContent.Length;
                 var reduction = originalSize - newSize;
                 var percent = originalSize > 0 ? (reduction * 100.0 / originalSize) : 0;
-                Console.WriteLine($"      Minified: {originalSize} -> {newSize} bytes ({percent:F1}% reduction)");
+                Logger.LogVerbose($"      Minified: {originalSize} -> {newSize} bytes ({percent:F1}% reduction)", context.Verbose);
                 
                 if (result.Errors.Count > 0)
                 {
-                    Console.WriteLine($"      Minification warnings: {result.Errors.Count}");
+                    Logger.LogVerbose($"      Minification warnings: {result.Errors.Count}", context.Verbose);
                 }
             }
         }
-        else if (context.Verbose)
+        else
         {
-            Console.WriteLine($"      Minification failed, using original content");
+            Logger.LogVerbose("      Minification failed, using original content", context.Verbose);
         }
         // If minification completely fails, keep original content
         

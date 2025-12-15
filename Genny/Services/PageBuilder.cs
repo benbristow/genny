@@ -10,10 +10,7 @@ public static class PageBuilder
         // Read page content
         var pageContent = await File.ReadAllTextAsync(filePath);
         
-        if (verbose)
-        {
-            Console.WriteLine($"  Processing: {Path.GetRelativePath(rootDirectory, filePath)}");
-        }
+        Logger.LogVerbose($"  Processing: {Path.GetRelativePath(rootDirectory, filePath)}", verbose);
         
         // Create initial context
         var context = new PageProcessingContext
@@ -36,7 +33,7 @@ public static class PageBuilder
             var sizeBefore = pageContent.Length;
             var sizeAfter = context.Content.Length;
             var change = sizeAfter > sizeBefore ? "+" : "";
-            Console.WriteLine($"    Size: {sizeBefore} -> {sizeAfter} bytes ({change}{sizeAfter - sizeBefore})");
+            Logger.LogVerbose($"    Size: {sizeBefore} -> {sizeAfter} bytes ({change}{sizeAfter - sizeBefore})", verbose);
         }
         
         return context.Content;

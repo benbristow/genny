@@ -1,16 +1,16 @@
-namespace Genny.Services.PageProcessing;
+namespace Genny.Services.SiteGeneration;
 
 /// <summary>
-/// Pipeline that chains multiple page processors together.
+/// Pipeline that chains multiple site processors together.
 /// </summary>
-public class PageProcessingPipeline
+public class SiteGenerationPipeline
 {
-    private readonly List<IPageProcessor> _processors = new();
+    private readonly List<ISiteProcessor> _processors = new();
 
     /// <summary>
     /// Adds a processor to the pipeline.
     /// </summary>
-    public PageProcessingPipeline AddProcessor(IPageProcessor processor)
+    public SiteGenerationPipeline AddProcessor(ISiteProcessor processor)
     {
         _processors.Add(processor);
         return this;
@@ -19,11 +19,11 @@ public class PageProcessingPipeline
     /// <summary>
     /// Processes the context through all processors in sequence.
     /// </summary>
-    public async Task<PageProcessingContext> ProcessAsync(PageProcessingContext context)
+    public async Task<SiteGenerationContext> ProcessAsync(SiteGenerationContext context)
     {
         foreach (var processor in _processors)
         {
-            Logger.LogVerbose($"    Running: {processor.GetType().Name}", context.Verbose);
+            Logger.LogVerbose($"Running: {processor.GetType().Name}", context.Verbose);
             
             context = await processor.ProcessAsync(context);
         }

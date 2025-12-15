@@ -34,10 +34,7 @@ public partial class PartialInclusionProcessor : IPageProcessor
             if (context.IncludedPartials.Contains(partialPath))
             {
                 // Circular reference detected - remove placeholder to prevent infinite loop
-                if (context.Verbose)
-                {
-                    Console.WriteLine($"      Skipping circular reference: {partialName}");
-                }
+                Logger.LogVerbose($"      Skipping circular reference: {partialName}", context.Verbose);
                 result = result.Remove(match.Index, match.Length);
                 continue;
             }
@@ -51,10 +48,7 @@ public partial class PartialInclusionProcessor : IPageProcessor
                 // Load partial content
                 var partialContent = await File.ReadAllTextAsync(partialPath);
                 
-                if (context.Verbose)
-                {
-                    Console.WriteLine($"      Including partial: {partialName}");
-                }
+                Logger.LogVerbose($"      Including partial: {partialName}", context.Verbose);
                 
                 // Create context for partial processing
                 var partialContext = new PageProcessingContext
@@ -87,17 +81,14 @@ public partial class PartialInclusionProcessor : IPageProcessor
             else
             {
                 // Partial not found or directory doesn't exist - remove placeholder
-                if (context.Verbose)
-                {
-                    Console.WriteLine($"      Partial not found: {partialName}");
-                }
+                Logger.LogVerbose($"      Partial not found: {partialName}", context.Verbose);
                 result = result.Remove(match.Index, match.Length);
             }
         }
         
         if (context.Verbose && includedCount > 0)
         {
-            Console.WriteLine($"      Included {includedCount} partial(s)");
+            Logger.LogVerbose($"      Included {includedCount} partial(s)", context.Verbose);
         }
         
         context.Content = result;

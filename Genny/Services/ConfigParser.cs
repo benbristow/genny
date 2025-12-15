@@ -16,7 +16,7 @@ public static class ConfigParser
         var root = FindRootDirectory();
         if (root == null)
         {
-            Console.WriteLine("Could not find root directory with genny.toml");
+            Logger.Log("Could not find root directory with genny.toml");
             return null;
         }
 
@@ -51,7 +51,7 @@ public static class ConfigParser
     {
         if (!File.Exists(configPath))
         {
-            Console.WriteLine($"Config file {configPath} not found");
+            Logger.Log($"Config file {configPath} not found");
             return null;
         }
 
@@ -90,7 +90,7 @@ public static class ConfigParser
             var rootDir = Path.GetDirectoryName(configPath);
             if (rootDir == null)
             {
-                Console.WriteLine($"Could not determine root directory from config path: {configPath}");
+                Logger.Log($"Could not determine root directory from config path: {configPath}");
                 return null;
             }
 
@@ -101,7 +101,7 @@ public static class ConfigParser
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error parsing config file: {ex.Message}");
+            Logger.Log($"Error parsing config file: {ex.Message}");
             return null;
         }
     }

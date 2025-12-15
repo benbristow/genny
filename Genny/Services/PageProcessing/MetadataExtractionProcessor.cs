@@ -47,8 +47,8 @@ public partial class MetadataExtractionProcessor : IPageProcessor
 
         if (context.Verbose)
         {
-            Console.WriteLine($"      Title: \"{context.PageTitle}\"");
-            Console.WriteLine($"      Layout: {context.LayoutName}");
+            Logger.LogVerbose($"      Title: \"{context.PageTitle}\"", context.Verbose);
+            Logger.LogVerbose($"      Layout: {context.LayoutName}", context.Verbose);
         }
 
         return Task.FromResult(context);

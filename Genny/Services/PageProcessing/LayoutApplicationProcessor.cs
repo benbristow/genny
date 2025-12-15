@@ -18,14 +18,11 @@ public class LayoutApplicationProcessor : IPageProcessor
             context.Content = layoutContent;
             // PageBody is already set from previous processing
             
-            if (context.Verbose)
-            {
-                Console.WriteLine($"      Applied layout: {context.LayoutName}");
-            }
+            Logger.LogVerbose($"      Applied layout: {context.LayoutName}", context.Verbose);
         }
-        else if (context.Verbose)
+        else
         {
-            Console.WriteLine($"      Layout not found: {context.LayoutName} (using page content as-is)");
+            Logger.LogVerbose($"      Layout not found: {context.LayoutName} (using page content as-is)", context.Verbose);
         }
 
         // If layout doesn't exist, content remains as-is (no layout applied)

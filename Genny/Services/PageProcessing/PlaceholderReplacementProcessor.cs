@@ -65,7 +65,7 @@ public partial class PlaceholderReplacementProcessor : IPageProcessor
         
         if (context.Verbose && replacements > 0)
         {
-            Console.WriteLine($"      Replaced {replacements} placeholder(s)");
+            Logger.LogVerbose($"      Replaced {replacements} placeholder(s)", context.Verbose);
         }
         
         context.Content = result;
