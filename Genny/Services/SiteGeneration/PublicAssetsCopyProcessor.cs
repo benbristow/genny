@@ -1,3 +1,5 @@
+using Genny.Constants;
+
 namespace Genny.Services.SiteGeneration;
 
 /// <summary>
@@ -7,7 +9,7 @@ public class PublicAssetsCopyProcessor : ISiteProcessor
 {
     public Task<SiteGenerationContext> ProcessAsync(SiteGenerationContext context)
     {
-        var publicDirectory = Path.Combine(context.SiteConfig.RootDirectory, "public");
+        var publicDirectory = Path.Combine(context.SiteConfig.RootDirectory, DirectoryConstants.Public);
         
         if (Directory.Exists(publicDirectory))
         {

@@ -1,3 +1,5 @@
+using Genny.Constants;
+
 namespace Genny.Services.PageProcessing;
 
 /// <summary>
@@ -12,7 +14,7 @@ public class PermalinkCalculationProcessor : IPageProcessor
             return Task.FromResult(context);
         }
 
-        var pagesDirectory = Path.Combine(context.RootDirectory, "pages");
+        var pagesDirectory = Path.Combine(context.RootDirectory, DirectoryConstants.Pages);
         context.Permalink = PageUrlHelper.CalculatePageUrl(context.FilePath, pagesDirectory, context.SiteConfig.BaseUrl);
         
         Logger.LogVerbose($"      Permalink: {context.Permalink}", context.Verbose);

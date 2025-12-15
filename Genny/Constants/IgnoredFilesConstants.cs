@@ -1,4 +1,4 @@
-namespace Genny.Services.SiteGeneration;
+namespace Genny.Constants;
 
 /// <summary>
 /// Constants for files and directories that should be ignored during site generation.
@@ -38,8 +38,8 @@ public static class IgnoredFilesConstants
         ".next",
         ".nuxt",
         "dist",
-        "build",
+        DirectoryConstants.Build,
         ".cache",
-        "layouts"
+        DirectoryConstants.Layouts
     };
 }

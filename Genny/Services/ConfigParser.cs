@@ -1,4 +1,5 @@
 using Tomlyn;
+using Genny.Constants;
 using Genny.Models;
 
 namespace Genny.Services;
@@ -95,7 +96,7 @@ public static class ConfigParser
             }
 
             config.RootDirectory = rootDir;
-            config.OutputDirectory = Path.Combine(config.RootDirectory, "build");
+            config.OutputDirectory = Path.Combine(config.RootDirectory, DirectoryConstants.Build);
 
             return config;
         }

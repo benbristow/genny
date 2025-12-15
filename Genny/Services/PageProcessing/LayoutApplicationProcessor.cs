@@ -1,3 +1,5 @@
+using Genny.Constants;
+
 namespace Genny.Services.PageProcessing;
 
 /// <summary>
@@ -7,7 +9,7 @@ public class LayoutApplicationProcessor : IPageProcessor
 {
     public async Task<PageProcessingContext> ProcessAsync(PageProcessingContext context)
     {
-        var layoutPath = Path.Combine(context.RootDirectory, "layouts", context.LayoutName);
+        var layoutPath = Path.Combine(context.RootDirectory, DirectoryConstants.Layouts, context.LayoutName);
         
         if (File.Exists(layoutPath))
         {

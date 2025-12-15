@@ -1,3 +1,5 @@
+using Genny.Constants;
+
 namespace Genny.Services.SiteGeneration;
 
 /// <summary>
@@ -7,7 +9,7 @@ public class PageDiscoveryProcessor : ISiteProcessor
 {
     public Task<SiteGenerationContext> ProcessAsync(SiteGenerationContext context)
     {
-        var pagesDirectory = Path.Combine(context.SiteConfig.RootDirectory, "pages");
+        var pagesDirectory = Path.Combine(context.SiteConfig.RootDirectory, DirectoryConstants.Pages);
         context.PagesDirectory = pagesDirectory;
         context.Pages = GetPageTreeRecursive(pagesDirectory);
 

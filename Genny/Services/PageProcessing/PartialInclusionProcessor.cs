@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Genny.Constants;
 
 namespace Genny.Services.PageProcessing;
 
@@ -15,7 +16,7 @@ public partial class PartialInclusionProcessor : IPageProcessor
     public async Task<PageProcessingContext> ProcessAsync(PageProcessingContext context)
     {
         var result = context.Content;
-        var partialsDir = Path.Combine(context.RootDirectory, "partials");
+        var partialsDir = Path.Combine(context.RootDirectory, DirectoryConstants.Partials);
         
         // Find all partial placeholders
         var matches = PartialPlaceholderRegex().Matches(result);
