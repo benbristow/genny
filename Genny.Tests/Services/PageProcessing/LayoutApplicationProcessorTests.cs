@@ -220,4 +220,78 @@ public class LayoutApplicationProcessorTests
             Directory.Delete(tempDir, recursive: true);
         }
     }
+
+    [Fact]
+    public async Task ProcessAsync_WithLayoutReferencedWithoutExtension_FindsLayoutWithExtension()
+    {
+        // Arrange
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        
+        var layoutsDir = Path.Combine(tempDir, "layouts");
+        Directory.CreateDirectory(layoutsDir);
+        var layoutPath = Path.Combine(layoutsDir, "custom.html");
+        await File.WriteAllTextAsync(layoutPath, "<html><body>{{ content }}</body></html>");
+        
+        var processor = new LayoutApplicationProcessor();
+        var context = new PageProcessingContext
+        {
+            Content = "<p>Page Body</p>",
+            PageBody = "<p>Page Body</p>",
+            LayoutName = "custom", // Referenced without .html
+            RootDirectory = tempDir,
+            SiteConfig = new SiteConfig(),
+            IncludedPartials = []
+        };
+
+        try
+        {
+            // Act
+            var result = await processor.ProcessAsync(context);
+
+            // Assert
+            result.Content.ShouldBe("<html><body>{{ content }}</body></html>");
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task ProcessAsync_WithLayoutReferencedWithExtension_FindsLayoutWithExtension()
+    {
+        // Arrange
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        
+        var layoutsDir = Path.Combine(tempDir, "layouts");
+        Directory.CreateDirectory(layoutsDir);
+        var layoutPath = Path.Combine(layoutsDir, "custom.html"); // File with .html
+        await File.WriteAllTextAsync(layoutPath, "<html><body>{{ content }}</body></html>");
+        
+        var processor = new LayoutApplicationProcessor();
+        var context = new PageProcessingContext
+        {
+            Content = "<p>Page Body</p>",
+            PageBody = "<p>Page Body</p>",
+            LayoutName = "custom.html", // Referenced with .html
+            RootDirectory = tempDir,
+            SiteConfig = new SiteConfig(),
+            IncludedPartials = []
+        };
+
+        try
+        {
+            // Act
+            var result = await processor.ProcessAsync(context);
+
+            // Assert
+            result.Content.ShouldBe("<html><body>{{ content }}</body></html>");
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
 }

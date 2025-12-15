@@ -302,4 +302,64 @@ public class PartialInclusionProcessorTests
             Directory.Delete(tempDir, recursive: true);
         }
     }
+
+    [Fact]
+    public async Task ProcessAsync_WithPartialReferencedWithoutExtension_FindsPartialWithExtension()
+    {
+        // Arrange
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        
+        var partialsDir = Path.Combine(tempDir, "partials");
+        Directory.CreateDirectory(partialsDir);
+        var partialPath = Path.Combine(partialsDir, "header.html");
+        await File.WriteAllTextAsync(partialPath, "<header>Header Content</header>");
+        
+        var processor = new PartialInclusionProcessor();
+        var context = CreateContext("{{ partial: header }}", tempDir); // Referenced without .html
+
+        try
+        {
+            // Act
+            var result = await processor.ProcessAsync(context);
+
+            // Assert
+            result.Content.ShouldBe("<header>Header Content</header>");
+            result.Content.ShouldNotContain("{{ partial:");
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task ProcessAsync_WithPartialReferencedWithExtension_FindsPartialWithExtension()
+    {
+        // Arrange
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        
+        var partialsDir = Path.Combine(tempDir, "partials");
+        Directory.CreateDirectory(partialsDir);
+        var partialPath = Path.Combine(partialsDir, "header.html"); // File with .html
+        await File.WriteAllTextAsync(partialPath, "<header>Header Content</header>");
+        
+        var processor = new PartialInclusionProcessor();
+        var context = CreateContext("{{ partial: header.html }}", tempDir); // Referenced with .html
+
+        try
+        {
+            // Act
+            var result = await processor.ProcessAsync(context);
+
+            // Assert
+            result.Content.ShouldBe("<header>Header Content</header>");
+            result.Content.ShouldNotContain("{{ partial:");
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
 }

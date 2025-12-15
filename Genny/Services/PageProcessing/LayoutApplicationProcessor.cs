@@ -9,7 +9,15 @@ public class LayoutApplicationProcessor : IPageProcessor
 {
     public async Task<PageProcessingContext> ProcessAsync(PageProcessingContext context)
     {
-        var layoutPath = Path.Combine(context.RootDirectory, DirectoryConstants.Layouts, context.LayoutName);
+        var layoutsDir = Path.Combine(context.RootDirectory, DirectoryConstants.Layouts);
+        var layoutPath = Path.Combine(layoutsDir, context.LayoutName);
+        
+        // If layout name doesn't have .html extension, add it
+        // Files must be named with .html extension
+        if (!context.LayoutName.EndsWith(".html", StringComparison.OrdinalIgnoreCase))
+        {
+            layoutPath = Path.Combine(layoutsDir, context.LayoutName + ".html");
+        }
         
         if (File.Exists(layoutPath))
         {

@@ -30,6 +30,13 @@ public partial class PartialInclusionProcessor : IPageProcessor
             if (match is not { Success: true, Groups.Count: > 1 }) continue;
             var partialName = match.Groups[1].Value.Trim();
             var partialPath = Path.Combine(partialsDir, partialName);
+            
+            // If partial name doesn't have .html extension, add it
+            // Files must be named with .html extension
+            if (!partialName.EndsWith(".html", StringComparison.OrdinalIgnoreCase))
+            {
+                partialPath = Path.Combine(partialsDir, partialName + ".html");
+            }
                 
             // Check for circular reference
             if (context.IncludedPartials.Contains(partialPath))

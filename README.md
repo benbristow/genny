@@ -399,6 +399,7 @@ The title will be extracted and available as `{{title}}` in your layout. If no t
 - If no layout is specified, Genny looks for `default.html`
 - If no layout exists, the page content is used as-is
 - Layouts are not copied to the build directory (they're templates only)
+- **Optional .html Extension:** The `.html` extension is optional when referencing layouts. You can use `<!-- layout: custom -->` or `<!-- layout: custom.html -->` - both will find `custom.html`. Layout files must be named with the `.html` extension.
 
 ### Partials Directory (`partials/`)
 
@@ -410,6 +411,8 @@ Partials are reusable HTML snippets that can be included in layouts, pages, and 
 ```
 
 Spaces around the colon are optional: `{{ partial : filename.html }}` works the same way.
+
+**Optional .html Extension:** The `.html` extension is optional when referencing partials. You can use `{{ partial: header }}` or `{{ partial: header.html }}` - both will find `header.html`. Partial files must be named with the `.html` extension.
 
 **Example Partial** (`partials/header.html`):
 ```html
