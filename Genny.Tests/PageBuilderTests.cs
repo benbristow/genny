@@ -850,4 +850,290 @@ public class PageBuilderTests
             Directory.Delete(tempDir, recursive: true);
         }
     }
+
+    [Fact]
+    public async Task BuildPageAsync_WithPartialInLayout_IncludesPartialContent()
+    {
+        // Arrange
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        
+        var layoutsDir = Path.Combine(tempDir, "layouts");
+        Directory.CreateDirectory(layoutsDir);
+        var layoutPath = Path.Combine(layoutsDir, "default.html");
+        await File.WriteAllTextAsync(layoutPath, "<html><body><header>{{ partial: header.html }}</header><main>{{ content }}</main></body></html>");
+        
+        var partialsDir = Path.Combine(tempDir, "partials");
+        Directory.CreateDirectory(partialsDir);
+        var headerPath = Path.Combine(partialsDir, "header.html");
+        await File.WriteAllTextAsync(headerPath, "<h1>Site Header</h1>");
+        
+        var pagesDir = Path.Combine(tempDir, "pages");
+        Directory.CreateDirectory(pagesDir);
+        var pagePath = Path.Combine(pagesDir, "index.html");
+        await File.WriteAllTextAsync(pagePath, "<p>Page content</p>");
+
+        var siteConfig = CreateTestSiteConfig(tempDir);
+
+        try
+        {
+            // Act
+            var result = await PageBuilder.BuildPageAsync(pagePath, tempDir, siteConfig);
+
+            // Assert
+            result.ShouldContain("<h1>Site Header</h1>");
+            result.ShouldContain("<p>Page content</p>");
+            result.ShouldNotContain("{{ partial: header.html }}");
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task BuildPageAsync_WithPartialInPage_IncludesPartialContent()
+    {
+        // Arrange
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        
+        var layoutsDir = Path.Combine(tempDir, "layouts");
+        Directory.CreateDirectory(layoutsDir);
+        var layoutPath = Path.Combine(layoutsDir, "default.html");
+        await File.WriteAllTextAsync(layoutPath, "<html><body>{{ content }}</body></html>");
+        
+        var partialsDir = Path.Combine(tempDir, "partials");
+        Directory.CreateDirectory(partialsDir);
+        var footerPath = Path.Combine(partialsDir, "footer.html");
+        await File.WriteAllTextAsync(footerPath, "<footer>Copyright 2025</footer>");
+        
+        var pagesDir = Path.Combine(tempDir, "pages");
+        Directory.CreateDirectory(pagesDir);
+        var pagePath = Path.Combine(pagesDir, "index.html");
+        await File.WriteAllTextAsync(pagePath, "<p>Page content</p>{{ partial: footer.html }}");
+
+        var siteConfig = CreateTestSiteConfig(tempDir);
+
+        try
+        {
+            // Act
+            var result = await PageBuilder.BuildPageAsync(pagePath, tempDir, siteConfig);
+
+            // Assert
+            result.ShouldContain("<p>Page content</p>");
+            result.ShouldContain("<footer>Copyright 2025</footer>");
+            result.ShouldNotContain("{{ partial: footer.html }}");
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task BuildPageAsync_WithNestedPartials_IncludesAllPartials()
+    {
+        // Arrange
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        
+        var layoutsDir = Path.Combine(tempDir, "layouts");
+        Directory.CreateDirectory(layoutsDir);
+        var layoutPath = Path.Combine(layoutsDir, "default.html");
+        await File.WriteAllTextAsync(layoutPath, "<html><body>{{ partial: header.html }}{{ content }}</body></html>");
+        
+        var partialsDir = Path.Combine(tempDir, "partials");
+        Directory.CreateDirectory(partialsDir);
+        var headerPath = Path.Combine(partialsDir, "header.html");
+        await File.WriteAllTextAsync(headerPath, "<header><nav>{{ partial: nav.html }}</nav></header>");
+        var navPath = Path.Combine(partialsDir, "nav.html");
+        await File.WriteAllTextAsync(navPath, "<nav><a href=\"/\">Home</a></nav>");
+        
+        var pagesDir = Path.Combine(tempDir, "pages");
+        Directory.CreateDirectory(pagesDir);
+        var pagePath = Path.Combine(pagesDir, "index.html");
+        await File.WriteAllTextAsync(pagePath, "<p>Content</p>");
+
+        var siteConfig = CreateTestSiteConfig(tempDir);
+
+        try
+        {
+            // Act
+            var result = await PageBuilder.BuildPageAsync(pagePath, tempDir, siteConfig);
+
+            // Assert
+            result.ShouldContain("<nav><a href=\"/\">Home</a></nav>");
+            result.ShouldContain("<p>Content</p>");
+            result.ShouldNotContain("{{ partial:");
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task BuildPageAsync_WithCircularPartialReference_PreventsInfiniteLoop()
+    {
+        // Arrange
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        
+        var layoutsDir = Path.Combine(tempDir, "layouts");
+        Directory.CreateDirectory(layoutsDir);
+        var layoutPath = Path.Combine(layoutsDir, "default.html");
+        await File.WriteAllTextAsync(layoutPath, "<html><body>{{ partial: partialA.html }}</body></html>");
+        
+        var partialsDir = Path.Combine(tempDir, "partials");
+        Directory.CreateDirectory(partialsDir);
+        var partialAPath = Path.Combine(partialsDir, "partialA.html");
+        await File.WriteAllTextAsync(partialAPath, "<div>A includes: {{ partial: partialB.html }}</div>");
+        var partialBPath = Path.Combine(partialsDir, "partialB.html");
+        await File.WriteAllTextAsync(partialBPath, "<div>B includes: {{ partial: partialA.html }}</div>");
+        
+        var pagesDir = Path.Combine(tempDir, "pages");
+        Directory.CreateDirectory(pagesDir);
+        var pagePath = Path.Combine(pagesDir, "index.html");
+        await File.WriteAllTextAsync(pagePath, "<p>Content</p>");
+
+        var siteConfig = CreateTestSiteConfig(tempDir);
+
+        try
+        {
+            // Act
+            var result = await PageBuilder.BuildPageAsync(pagePath, tempDir, siteConfig);
+
+            // Assert
+            // Should contain the first level of partials but not create infinite loop
+            result.ShouldContain("<div>A includes:");
+            result.ShouldContain("<div>B includes:");
+            // The circular reference should be removed (the second {{ partial: partialA.html }} should be gone)
+            var partialACount = (result.Length - result.Replace("partialA.html", "").Length) / "partialA.html".Length;
+            partialACount.ShouldBeLessThanOrEqualTo(1); // Should only appear once (in the removed placeholder)
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task BuildPageAsync_WithMissingPartial_RemovesPlaceholder()
+    {
+        // Arrange
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        
+        var layoutsDir = Path.Combine(tempDir, "layouts");
+        Directory.CreateDirectory(layoutsDir);
+        var layoutPath = Path.Combine(layoutsDir, "default.html");
+        await File.WriteAllTextAsync(layoutPath, "<html><body>{{ partial: missing.html }}{{ content }}</body></html>");
+        
+        var pagesDir = Path.Combine(tempDir, "pages");
+        Directory.CreateDirectory(pagesDir);
+        var pagePath = Path.Combine(pagesDir, "index.html");
+        await File.WriteAllTextAsync(pagePath, "<p>Content</p>");
+
+        var siteConfig = CreateTestSiteConfig(tempDir);
+
+        try
+        {
+            // Act
+            var result = await PageBuilder.BuildPageAsync(pagePath, tempDir, siteConfig);
+
+            // Assert
+            result.ShouldContain("<p>Content</p>");
+            result.ShouldNotContain("{{ partial: missing.html }}");
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task BuildPageAsync_WithPartialWithSpaces_HandlesCorrectly()
+    {
+        // Arrange
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        
+        var layoutsDir = Path.Combine(tempDir, "layouts");
+        Directory.CreateDirectory(layoutsDir);
+        var layoutPath = Path.Combine(layoutsDir, "default.html");
+        await File.WriteAllTextAsync(layoutPath, "<html><body>{{ partial : header.html }}{{ content }}</body></html>");
+        
+        var partialsDir = Path.Combine(tempDir, "partials");
+        Directory.CreateDirectory(partialsDir);
+        var headerPath = Path.Combine(partialsDir, "header.html");
+        await File.WriteAllTextAsync(headerPath, "<h1>Header</h1>");
+        
+        var pagesDir = Path.Combine(tempDir, "pages");
+        Directory.CreateDirectory(pagesDir);
+        var pagePath = Path.Combine(pagesDir, "index.html");
+        await File.WriteAllTextAsync(pagePath, "<p>Content</p>");
+
+        var siteConfig = CreateTestSiteConfig(tempDir);
+
+        try
+        {
+            // Act
+            var result = await PageBuilder.BuildPageAsync(pagePath, tempDir, siteConfig);
+
+            // Assert
+            result.ShouldContain("<h1>Header</h1>");
+            result.ShouldContain("<p>Content</p>");
+            result.ShouldNotContain("{{ partial");
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task BuildPageAsync_WithPlaceholdersInPartial_ReplacesPlaceholders()
+    {
+        // Arrange
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        
+        var layoutsDir = Path.Combine(tempDir, "layouts");
+        Directory.CreateDirectory(layoutsDir);
+        var layoutPath = Path.Combine(layoutsDir, "default.html");
+        await File.WriteAllTextAsync(layoutPath, "<html><body>{{ partial: header.html }}{{ content }}</body></html>");
+        
+        var partialsDir = Path.Combine(tempDir, "partials");
+        Directory.CreateDirectory(partialsDir);
+        var headerPath = Path.Combine(partialsDir, "header.html");
+        await File.WriteAllTextAsync(headerPath, "<header><h1>{{ site.name }}</h1><p>{{ site.description }}</p><span>{{ year }}</span></header>");
+        
+        var pagesDir = Path.Combine(tempDir, "pages");
+        Directory.CreateDirectory(pagesDir);
+        var pagePath = Path.Combine(pagesDir, "index.html");
+        await File.WriteAllTextAsync(pagePath, "<p>Content</p>");
+
+        var siteConfig = CreateTestSiteConfig(tempDir);
+        siteConfig.Name = "Test Site Name";
+        siteConfig.Description = "Test Description";
+
+        try
+        {
+            // Act
+            var result = await PageBuilder.BuildPageAsync(pagePath, tempDir, siteConfig);
+
+            // Assert
+            result.ShouldContain("<h1>Test Site Name</h1>");
+            result.ShouldContain("<p>Test Description</p>");
+            result.ShouldContain($"<span>{DateTime.Now.Year}</span>");
+            result.ShouldNotContain("{{ site.name }}");
+            result.ShouldNotContain("{{ site.description }}");
+            result.ShouldNotContain("{{ year }}");
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
 }

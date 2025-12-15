@@ -10,6 +10,7 @@ For people that want to generate websites and don't want a headache of configuri
 
 - 🚀 **Simple and Fast** - Build static sites quickly with minimal configuration
 - 📄 **Layout System** - Reusable layouts with content placeholders
+- 🧩 **Partials Support** - Include reusable HTML snippets in layouts and pages
 - 📁 **Organized Structure** - Clean separation of pages, layouts, and assets
 - 🎨 **Asset Management** - Automatic copying of public assets
 - 🧹 **Smart Filtering** - Automatically ignores common development files
@@ -43,6 +44,9 @@ your-site/
 │   └── about.html
 ├── layouts/            # Layout templates (optional)
 │   └── default.html
+├── partials/           # Reusable HTML snippets (optional)
+│   ├── header.html
+│   └── footer.html
 └── public/             # Static assets (optional)
     ├── style.css
     └── images/
@@ -141,6 +145,7 @@ Layouts are HTML templates that wrap your page content. They use the `{{content}
 - `{{site.description}}` or `{{ site.description }}` - Site description from `genny.toml`
 - `{{year}}` or `{{ year }}` - Current year (e.g., 2025)
 - `{{epoch}}` or `{{ epoch }}` - Current Unix epoch timestamp in seconds (e.g., 1734201600)
+- `{{permalink}}` or `{{ permalink }}` - The full URL of the current page
 
 **Note:** Spaces around placeholder names are optional. Both `{{title}}` and `{{ title }}` work the same way.
 
@@ -197,6 +202,81 @@ The title will be extracted and available as `{{title}}` in your layout. If no t
 - If no layout exists, the page content is used as-is
 - Layouts are not copied to the build directory (they're templates only)
 
+### Partials Directory (`partials/`)
+
+Partials are reusable HTML snippets that can be included in layouts, pages, and other partials. They're perfect for components like headers, footers, navigation menus, or any repeated content.
+
+**Syntax:**
+```html
+{{ partial: filename.html }}
+```
+
+Spaces around the colon are optional: `{{ partial : filename.html }}` works the same way.
+
+**Example Partial** (`partials/header.html`):
+```html
+<header>
+    <h1>{{ site.name }}</h1>
+    <nav>
+        <a href="/">Home</a>
+        <a href="/about.html">About</a>
+    </nav>
+</header>
+```
+
+**Using Partials in a Layout:**
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ site.name }} - {{ title }}</title>
+</head>
+<body>
+    {{ partial: header.html }}
+    <main>
+        {{ content }}
+    </main>
+    {{ partial: footer.html }}
+</body>
+</html>
+```
+
+**Using Partials in a Page:**
+```html
+<body>
+    <h1>Welcome</h1>
+    <p>Check out our latest news:</p>
+    {{ partial: news-section.html }}
+</body>
+```
+
+**Nested Partials:**
+Partials can include other partials. For example, `header.html` can include `nav.html`:
+
+**partials/header.html:**
+```html
+<header>
+    <h1>{{ site.name }}</h1>
+    {{ partial: nav.html }}
+</header>
+```
+
+**partials/nav.html:**
+```html
+<nav>
+    <a href="/">Home</a>
+    <a href="/about.html">About</a>
+</nav>
+```
+
+**Circular Reference Prevention:**
+Genny automatically prevents circular references (e.g., partial A includes partial B which includes partial A). If a circular reference is detected, the placeholder is removed to prevent infinite loops.
+
+**Missing Partials:**
+If a partial file doesn't exist, the placeholder is automatically removed from the output.
+
+**Note:** Partials are not copied to the build directory (they're templates only).
+
 ### Public Directory (`public/`)
 
 Static assets like CSS, JavaScript, images, and other files go in the `public/` directory. Everything in `public/` is copied to the build root:
@@ -215,11 +295,12 @@ public/
 
 The configuration file supports the following options:
 
-| Option | Description | Required |
-|--------|-------------|----------|
-| `name` | Site name | No |
-| `description` | Site description | No |
-| `base_url` | Base URL for the site (used in sitemap) | No |
+| Option | Description | Required | Default |
+|--------|-------------|----------|---------|
+| `name` | Site name | No | `""` |
+| `description` | Site description | No | `""` |
+| `base_url` | Base URL for the site (used in sitemap and permalinks) | No | `null` |
+| `generate_sitemap` | Whether to generate sitemap.xml | No | `true` |
 
 Example:
 
@@ -258,6 +339,7 @@ Genny automatically ignores common development files and directories:
 - `node_modules`, `.git`, `.vscode`, `.idea`, `.vs`
 - `.next`, `.nuxt`, `dist`, `build`, `.cache`
 - `layouts` (templates, not copied to build)
+- `partials` (templates, not copied to build)
 
 ## Examples
 
@@ -317,6 +399,58 @@ Genny automatically ignores common development files and directories:
     <p>It's a complete HTML document.</p>
 </body>
 </html>
+```
+
+### Example 3: Using Partials
+
+**partials/header.html:**
+```html
+<header>
+    <h1>{{ site.name }}</h1>
+    <nav>{{ partial: nav.html }}</nav>
+</header>
+```
+
+**partials/nav.html:**
+```html
+<a href="/">Home</a>
+<a href="/about.html">About</a>
+<a href="/blog.html">Blog</a>
+```
+
+**partials/footer.html:**
+```html
+<footer>
+    <p>&copy; {{ year }} {{ site.name }}</p>
+    <p><a href="{{ permalink }}">Permalink</a></p>
+</footer>
+```
+
+**layouts/default.html:**
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ site.name }} - {{ title }}</title>
+    <link rel="canonical" href="{{ permalink }}">
+</head>
+<body>
+    {{ partial: header.html }}
+    <main>
+        {{ content }}
+    </main>
+    {{ partial: footer.html }}
+</body>
+</html>
+```
+
+**pages/index.html:**
+```html
+<!-- title: Home -->
+<body>
+    <h1>Welcome</h1>
+    <p>This is the homepage.</p>
+</body>
 ```
 
 ## Development
@@ -381,6 +515,12 @@ To use a custom base URL in the sitemap, add `base_url` to your `genny.toml`:
 
 ```toml
 base_url = "https://example.com"
+```
+
+To disable sitemap generation, set `generate_sitemap = false`:
+
+```toml
+generate_sitemap = false
 ```
 
 # TODO?
