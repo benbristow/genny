@@ -603,7 +603,7 @@ public class PageBuilderTests
         await File.WriteAllTextAsync(pagePath, "<body>Content</body>");
 
         var siteConfig = CreateTestSiteConfig(tempDir);
-        var expectedEpoch = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
+        var beforeEpoch = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
         try
         {
@@ -611,9 +611,17 @@ public class PageBuilderTests
             var result = await PageBuilder.BuildPageAsync(pagePath, tempDir, siteConfig);
 
             // Assert
-            result.ShouldContain($"href=\"/style.css?v={expectedEpoch}\"");
+            var afterEpoch = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            result.ShouldContain("href=\"/style.css?v=");
             result.ShouldNotContain("{{ epoch }}");
             result.ShouldNotContain("{{epoch}}");
+            
+            // Verify the epoch is a valid Unix timestamp (between before and after)
+            var epochMatch = System.Text.RegularExpressions.Regex.Match(result, @"style\.css\?v=(\d+)");
+            epochMatch.Success.ShouldBeTrue();
+            var epochValue = long.Parse(epochMatch.Groups[1].Value);
+            epochValue.ShouldBeGreaterThanOrEqualTo(beforeEpoch);
+            epochValue.ShouldBeLessThanOrEqualTo(afterEpoch + 1); // Allow 1 second tolerance
         }
         finally
         {
