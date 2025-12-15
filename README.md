@@ -4,6 +4,8 @@
 
 A static site generator built with .NET that transforms your HTML pages and assets into a production-ready website.
 
+For people that want to generate websites and don't want a headache of configuring a complex static site generator. Plays nicely with JavaScript asset management tools like Vite/Parcel/Webpack if that's what you want.
+
 ## Features
 
 - 🚀 **Simple and Fast** - Build static sites quickly with minimal configuration
@@ -138,8 +140,15 @@ Layouts are HTML templates that wrap your page content. They use the `{{content}
 - `{{site.name}}` or `{{ site.name }}` - Site name from `genny.toml`
 - `{{site.description}}` or `{{ site.description }}` - Site description from `genny.toml`
 - `{{year}}` or `{{ year }}` - Current year (e.g., 2025)
+- `{{epoch}}` or `{{ epoch }}` - Current Unix epoch timestamp in seconds (e.g., 1734201600)
 
 **Note:** Spaces around placeholder names are optional. Both `{{title}}` and `{{ title }}` work the same way.
+
+The `{{epoch}}` placeholder is useful for cache busting:
+```html
+<link rel="stylesheet" href="/style.css?v={{ epoch }}">
+<script src="/app.js?t={{ epoch }}"></script>
+```
 
 **Using a Custom Layout:**
 

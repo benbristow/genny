@@ -586,4 +586,79 @@ public class PageBuilderTests
             Directory.Delete(tempDir, recursive: true);
         }
     }
+
+    [Fact]
+    public async Task BuildPageAsync_WithEpochPlaceholder_ReplacesWithUnixEpoch()
+    {
+        // Arrange
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        
+        var layoutsDir = Path.Combine(tempDir, "layouts");
+        Directory.CreateDirectory(layoutsDir);
+        var layoutPath = Path.Combine(layoutsDir, "default.html");
+        await File.WriteAllTextAsync(layoutPath, "<html><head><link rel=\"stylesheet\" href=\"/style.css?v={{ epoch }}\"></head><body>{{ content }}</body></html>");
+        
+        var pagePath = Path.Combine(tempDir, "page.html");
+        await File.WriteAllTextAsync(pagePath, "<body>Content</body>");
+
+        var siteConfig = CreateTestSiteConfig(tempDir);
+        var expectedEpoch = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
+
+        try
+        {
+            // Act
+            var result = await PageBuilder.BuildPageAsync(pagePath, tempDir, siteConfig);
+
+            // Assert
+            result.ShouldContain($"href=\"/style.css?v={expectedEpoch}\"");
+            result.ShouldNotContain("{{ epoch }}");
+            result.ShouldNotContain("{{epoch}}");
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task BuildPageAsync_WithEpochPlaceholder_ReplacesWithCurrentUnixTimestamp()
+    {
+        // Arrange
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        
+        var layoutsDir = Path.Combine(tempDir, "layouts");
+        Directory.CreateDirectory(layoutsDir);
+        var layoutPath = Path.Combine(layoutsDir, "default.html");
+        await File.WriteAllTextAsync(layoutPath, "<html><body><script src=\"/app.js?t={{epoch}}\"></script>{{ content }}</body></html>");
+        
+        var pagePath = Path.Combine(tempDir, "page.html");
+        await File.WriteAllTextAsync(pagePath, "<body>Content</body>");
+
+        var siteConfig = CreateTestSiteConfig(tempDir);
+        var beforeEpoch = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
+        try
+        {
+            // Act
+            var result = await PageBuilder.BuildPageAsync(pagePath, tempDir, siteConfig);
+
+            // Assert
+            var afterEpoch = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            result.ShouldContain("app.js?t=");
+            result.ShouldNotContain("{{epoch}}");
+            
+            // Verify the epoch is a valid Unix timestamp (between before and after)
+            var epochMatch = System.Text.RegularExpressions.Regex.Match(result, @"app\.js\?t=(\d+)");
+            epochMatch.Success.ShouldBeTrue();
+            var epochValue = long.Parse(epochMatch.Groups[1].Value);
+            epochValue.ShouldBeGreaterThanOrEqualTo(beforeEpoch);
+            epochValue.ShouldBeLessThanOrEqualTo(afterEpoch + 1); // Allow 1 second tolerance
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
 }

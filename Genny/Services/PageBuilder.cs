@@ -22,6 +22,9 @@ public static partial class PageBuilder
     [GeneratedRegex(@"\{\{\s*year\s*\}\}", RegexOptions.IgnoreCase)]
     private static partial Regex YearPlaceholderRegex();
 
+    [GeneratedRegex(@"\{\{\s*epoch\s*\}\}", RegexOptions.IgnoreCase)]
+    private static partial Regex EpochPlaceholderRegex();
+
     [GeneratedRegex(@"<!--\s*layout:\s*([^\s]+)\s*-->", RegexOptions.IgnoreCase)]
     private static partial Regex LayoutCommentRegex();
 
@@ -41,8 +44,9 @@ public static partial class PageBuilder
         // Extract page title
         var pageTitle = ExtractPageTitle(pageContent);
         
-        // Get current year for placeholder replacement
+        // Get current year and epoch for placeholder replacement
         var currentYear = DateTime.Now.Year.ToString();
+        var currentEpoch = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
         
         // Check if page specifies a layout
         var layoutName = ExtractLayoutName(pageContent);
@@ -61,17 +65,17 @@ public static partial class PageBuilder
             var pageBody = ExtractPageBody(cleanedContent);
             
             // Replace placeholders (handles spaces in placeholders)
-            var result = ReplacePlaceholders(layoutContent, pageBody, pageTitle, siteConfig, currentYear);
+            var result = ReplacePlaceholders(layoutContent, pageBody, pageTitle, siteConfig, currentYear, currentEpoch);
             
             return result;
         }
 
         // No layout found, remove comments and replace placeholders in page content
         var cleanedPageContent = RemoveComments(pageContent);
-        return ReplacePlaceholders(cleanedPageContent, string.Empty, pageTitle, siteConfig, currentYear);
+        return ReplacePlaceholders(cleanedPageContent, string.Empty, pageTitle, siteConfig, currentYear, currentEpoch);
     }
 
-    private static string ReplacePlaceholders(string content, string pageBody, string pageTitle, SiteConfig siteConfig, string currentYear)
+    private static string ReplacePlaceholders(string content, string pageBody, string pageTitle, SiteConfig siteConfig, string currentYear, string currentEpoch)
     {
         // Use regex to replace placeholders with optional spaces
         // Matches {{placeholder}} or {{ placeholder }} or {{  placeholder  }} etc.
@@ -80,6 +84,7 @@ public static partial class PageBuilder
         result = SiteNamePlaceholderRegex().Replace(result, siteConfig.Name);
         result = SiteDescriptionPlaceholderRegex().Replace(result, siteConfig.Description);
         result = YearPlaceholderRegex().Replace(result, currentYear);
+        result = EpochPlaceholderRegex().Replace(result, currentEpoch);
         
         return result;
     }
