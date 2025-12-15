@@ -1,6 +1,6 @@
 using Genny.Services;
 
-namespace Genny.Tests;
+namespace Genny.Tests.Services;
 
 public class PageUrlHelperTests
 {

@@ -1,8 +1,8 @@
+using System.Xml.Linq;
 using Genny.Models;
 using Genny.Services;
-using System.Xml.Linq;
 
-namespace Genny.Tests;
+namespace Genny.Tests.Services;
 
 public class SitemapGeneratorTests
 {

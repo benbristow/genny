@@ -1,6 +1,6 @@
 using Genny.Services;
 
-namespace Genny.Tests;
+namespace Genny.Tests.Services;
 
 public class ConfigParserTests
 {
@@ -12,10 +12,10 @@ public class ConfigParserTests
         Directory.CreateDirectory(tempDir);
         
         var configPath = Path.Combine(tempDir, "genny.toml");
-        var configContent = """
-            name = "Test Site"
-            description = "A test site"
-            """;
+        const string configContent = """
+                                     name = "Test Site"
+                                     description = "A test site"
+                                     """;
         await File.WriteAllTextAsync(configPath, configContent);
 
         var originalDir = Directory.GetCurrentDirectory();
@@ -83,7 +83,7 @@ public class ConfigParserTests
         Directory.CreateDirectory(tempDir);
         
         var configPath = Path.Combine(tempDir, "genny.toml");
-        var configContent = "name = \"Partial Site\"";
+        const string configContent = "name = \"Partial Site\"";
         await File.WriteAllTextAsync(configPath, configContent);
 
         var originalDir = Directory.GetCurrentDirectory();
@@ -145,10 +145,10 @@ public class ConfigParserTests
         Directory.CreateDirectory(tempDir);
         
         var configPath = Path.Combine(tempDir, "genny.toml");
-        var configContent = """
-            name = "Test Site"
-            generate_sitemap = false
-            """;
+        const string configContent = """
+                                     name = "Test Site"
+                                     generate_sitemap = false
+                                     """;
         await File.WriteAllTextAsync(configPath, configContent);
 
         var originalDir = Directory.GetCurrentDirectory();
@@ -181,7 +181,7 @@ public class ConfigParserTests
         Directory.CreateDirectory(tempDir);
         
         var configPath = Path.Combine(tempDir, "genny.toml");
-        var configContent = "name = \"Test Site\"";
+        const string configContent = "name = \"Test Site\"";
         await File.WriteAllTextAsync(configPath, configContent);
 
         var originalDir = Directory.GetCurrentDirectory();
