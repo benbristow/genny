@@ -161,13 +161,14 @@ public class SiteGenerationPipelineTests
             // Act
             using (TestHelpers.SuppressConsoleOutput())
             {
-                var result = await pipeline.ProcessAsync(context);
+                await pipeline.ProcessAsync(context);
             }
 
             // Assert
             Directory.Exists(context.SiteConfig.OutputDirectory).ShouldBeTrue();
             context.Pages.Count.ShouldBe(1);
             context.CopiedPublicFiles.ShouldBe(1);
+            context.ProcessedPages.ShouldBe(1);
             File.Exists(Path.Combine(context.SiteConfig.OutputDirectory, "index.html")).ShouldBeTrue();
             File.Exists(Path.Combine(context.SiteConfig.OutputDirectory, "style.css")).ShouldBeTrue();
             File.Exists(Path.Combine(context.SiteConfig.OutputDirectory, "sitemap.xml")).ShouldBeTrue();
@@ -382,7 +383,7 @@ public class SiteGenerationPipelineTests
         try
         {
             // Act
-            var result = await processor.ProcessAsync(context);
+            await processor.ProcessAsync(context);
 
             // Assert
             var sitemapPath = Path.Combine(context.SiteConfig.OutputDirectory, "sitemap.xml");
@@ -424,7 +425,7 @@ public class SiteGenerationPipelineTests
         try
         {
             // Act
-            var result = await processor.ProcessAsync(context);
+            await processor.ProcessAsync(context);
 
             // Assert
             var sitemapPath = Path.Combine(context.SiteConfig.OutputDirectory, "sitemap.xml");
@@ -472,7 +473,7 @@ public class SiteGenerationPipelineTests
             // Act
             using (TestHelpers.SuppressConsoleOutput())
             {
-                var result = await processor.ProcessAsync(context);
+                await processor.ProcessAsync(context);
             }
 
             // Assert
