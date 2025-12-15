@@ -10,6 +10,7 @@ RUN dotnet publish -c Release -o /app/publish --no-restore
 
 WORKDIR /app/publish
 
+# This user will be overridden by --user flag when running, but provides a fallback
 RUN groupadd -r genny && useradd -r -g genny genny
 USER genny
 
