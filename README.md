@@ -57,7 +57,7 @@ Download the latest release binary for your platform from the [GitHub Actions ar
 
 ### Using GitHub Actions
 
-Use the [Genny GitHub Action](https://github.com/benbristow/genny-action) in your CI/CD workflows. See the [Using GitHub Actions](#using-github-actions) section below for detailed instructions.
+Use the [Genny GitHub Action](https://github.com/benbristow/genny-action) in your CI/CD workflows. See the [Using GitHub Actions](#using-github-actions-1) section below for detailed instructions.
 
 ### Build from Source
 
