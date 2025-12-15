@@ -205,4 +205,73 @@ public class ConfigParserTests
             Directory.Delete(tempDir, recursive: true);
         }
     }
+
+    [Fact]
+    public async Task ParseConfig_WithMinifyOutputFalse_ReturnsConfigWithMinifyOutputFalse()
+    {
+        // Arrange
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        
+        var configPath = Path.Combine(tempDir, "genny.toml");
+        const string configContent = """
+                                     name = "Test Site"
+                                     minify_output = false
+                                     """;
+        await File.WriteAllTextAsync(configPath, configContent);
+
+        var originalDir = Directory.GetCurrentDirectory();
+        try
+        {
+            Directory.SetCurrentDirectory(tempDir);
+            
+            // Act
+            using (TestHelpers.SuppressConsoleOutput())
+            {
+                var config = await ConfigParser.ParseConfig();
+
+                // Assert
+                config.ShouldNotBeNull();
+                config.MinifyOutput.ShouldBeFalse();
+            }
+        }
+        finally
+        {
+            Directory.SetCurrentDirectory(originalDir);
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task ParseConfig_WithoutMinifyOutput_DefaultsToTrue()
+    {
+        // Arrange
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        
+        var configPath = Path.Combine(tempDir, "genny.toml");
+        const string configContent = "name = \"Test Site\"";
+        await File.WriteAllTextAsync(configPath, configContent);
+
+        var originalDir = Directory.GetCurrentDirectory();
+        try
+        {
+            Directory.SetCurrentDirectory(tempDir);
+            
+            // Act
+            using (TestHelpers.SuppressConsoleOutput())
+            {
+                var config = await ConfigParser.ParseConfig();
+
+                // Assert
+                config.ShouldNotBeNull();
+                config.MinifyOutput.ShouldBeTrue();
+            }
+        }
+        finally
+        {
+            Directory.SetCurrentDirectory(originalDir);
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
 }

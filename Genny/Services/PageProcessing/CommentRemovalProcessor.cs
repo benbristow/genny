@@ -22,6 +22,9 @@ public partial class CommentRemovalProcessor : IPageProcessor
         result = TitleCommentRemovalRegex().Replace(result, string.Empty);
 
         context.Content = result;
+        // Set PageBody after comments are removed (used for {{content}} placeholder)
+        context.PageBody = result;
+        
         return Task.FromResult(context);
     }
 }

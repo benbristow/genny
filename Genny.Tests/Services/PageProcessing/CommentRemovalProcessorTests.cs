@@ -125,6 +125,26 @@ public class CommentRemovalProcessorTests
     }
 
     [Fact]
+    public async Task ProcessAsync_SetsPageBodyAfterRemovingComments()
+    {
+        // Arrange
+        var processor = new CommentRemovalProcessor();
+        var context = new PageProcessingContext
+        {
+            Content = "<!-- layout: custom.html --><body>Content</body>",
+            SiteConfig = new SiteConfig(),
+            IncludedPartials = []
+        };
+
+        // Act
+        var result = await processor.ProcessAsync(context);
+
+        // Assert
+        result.PageBody.ShouldBe("<body>Content</body>");
+        result.PageBody.ShouldBe(result.Content);
+    }
+
+    [Fact]
     public async Task ProcessAsync_ReturnsSameContextInstance()
     {
         // Arrange

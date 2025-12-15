@@ -22,23 +22,28 @@ public static class PageBuilder
         };
         
         // Build and execute processing pipeline
-        var pipeline = CreateProcessingPipeline();
+        var pipeline = CreateProcessingPipeline(siteConfig);
         context = await pipeline.ProcessAsync(context);
         
         return context.Content;
     }
 
-    private static PageProcessingPipeline CreateProcessingPipeline()
+    private static PageProcessingPipeline CreateProcessingPipeline(SiteConfig siteConfig)
     {
-        return new PageProcessingPipeline()
+        var pipeline = new PageProcessingPipeline()
             .AddProcessor(new MetadataExtractionProcessor())
             .AddProcessor(new PermalinkCalculationProcessor())
-            .AddProcessor(new TitleExtractionProcessor())
-            .AddProcessor(new LayoutExtractionProcessor())
             .AddProcessor(new CommentRemovalProcessor())
-            .AddProcessor(new PageBodyExtractionProcessor())
             .AddProcessor(new LayoutApplicationProcessor())
             .AddProcessor(new PlaceholderReplacementProcessor())
             .AddProcessor(new PartialInclusionProcessor());
+
+        // Conditionally add minifier based on config
+        if (siteConfig.MinifyOutput)
+        {
+            pipeline.AddProcessor(new MinifierProcessor());
+        }
+
+        return pipeline;
     }
 }

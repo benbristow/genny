@@ -35,4 +35,9 @@ public class SiteConfig
     /// Whether to generate a sitemap.xml file (defaults to true).
     /// </summary>
     public bool GenerateSitemap { get; set; } = true;
+
+    /// <summary>
+    /// Whether to minify HTML output by removing unnecessary whitespace (defaults to true).
+    /// </summary>
+    public bool MinifyOutput { get; set; } = true;
 }

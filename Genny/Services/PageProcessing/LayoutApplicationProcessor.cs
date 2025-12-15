@@ -18,8 +18,8 @@ public class LayoutApplicationProcessor : IPageProcessor
             context.Content = layoutContent;
             // PageBody is already set from previous processing
         }
-        // If layout doesn't exist, content remains as-is (no layout applied)
 
+        // If layout doesn't exist, content remains as-is (no layout applied)
         return context;
     }
 }

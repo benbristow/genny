@@ -82,6 +82,11 @@ public static class ConfigParser
                 config.GenerateSitemap = generateSitemap;
             }
 
+            if (tomlTable.TryGetValue("minify_output", out var minifyOutputObj) && minifyOutputObj is bool minifyOutput)
+            {
+                config.MinifyOutput = minifyOutput;
+            }
+
             var rootDir = Path.GetDirectoryName(configPath);
             if (rootDir == null)
             {

@@ -80,7 +80,7 @@ public class PageBuilderTests
     }
 
     [Fact]
-    public async Task BuildPageAsync_WithNoLayout_ReturnsPageAsIs()
+    public async Task BuildPageAsync_WithNoLayout_ReturnsMinifiedPage()
     {
         // Arrange
         var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
@@ -98,6 +98,7 @@ public class PageBuilderTests
             var result = await PageBuilder.BuildPageAsync(pagePath, tempDir, siteConfig);
 
             // Assert
+            // Since input is already minified, output should be the same
             result.ShouldBe(pageContent);
         }
         finally
@@ -299,7 +300,8 @@ public class PageBuilderTests
             var result = await PageBuilder.BuildPageAsync(pagePath, tempDir, siteConfig);
 
             // Assert
-            result.ShouldContain("<title>Test Site - </title>");
+            // Minifier removes trailing spaces, so "Test Site - " becomes "Test Site -"
+            result.ShouldContain("<title>Test Site -</title>");
             result.ShouldNotContain("{{title}}");
         }
         finally
@@ -1130,6 +1132,117 @@ public class PageBuilderTests
             result.ShouldNotContain("{{ site.name }}");
             result.ShouldNotContain("{{ site.description }}");
             result.ShouldNotContain("{{ year }}");
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task BuildPageAsync_WithWhitespace_MinifiesOutput()
+    {
+        // Arrange
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        
+        var layoutsDir = Path.Combine(tempDir, "layouts");
+        Directory.CreateDirectory(layoutsDir);
+        var layoutPath = Path.Combine(layoutsDir, "default.html");
+        await File.WriteAllTextAsync(layoutPath, "<html>\n    <body>\n        {{ content }}\n    </body>\n</html>");
+        
+        var pagePath = Path.Combine(tempDir, "page.html");
+        await File.WriteAllTextAsync(pagePath, "<div>\n    <p>   Content   with   spaces   </p>\n</div>");
+
+        var siteConfig = CreateTestSiteConfig(tempDir);
+
+        try
+        {
+            // Act
+            var result = await PageBuilder.BuildPageAsync(pagePath, tempDir, siteConfig);
+
+            // Assert
+            // Should be minified - no whitespace between tags, collapsed spaces in text
+            result.ShouldContain("<html><body>");
+            result.ShouldContain("<div><p>Content with spaces</p></div>");
+            result.ShouldContain("</body></html>");
+            // Should not have newlines or excessive whitespace
+            result.ShouldNotContain("\n");
+            result.ShouldNotContain("   "); // Multiple spaces should be collapsed
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task BuildPageAsync_WithMinifyOutputDisabled_PreservesWhitespace()
+    {
+        // Arrange
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        
+        var layoutsDir = Path.Combine(tempDir, "layouts");
+        Directory.CreateDirectory(layoutsDir);
+        var layoutPath = Path.Combine(layoutsDir, "default.html");
+        var layoutContent = "<html>\n    <body>\n        {{ content }}\n    </body>\n</html>";
+        await File.WriteAllTextAsync(layoutPath, layoutContent);
+        
+        var pagePath = Path.Combine(tempDir, "page.html");
+        var pageContent = "<div>\n    <p>   Content   with   spaces   </p>\n</div>";
+        await File.WriteAllTextAsync(pagePath, pageContent);
+
+        var siteConfig = CreateTestSiteConfig(tempDir);
+        siteConfig.MinifyOutput = false;
+
+        try
+        {
+            // Act
+            var result = await PageBuilder.BuildPageAsync(pagePath, tempDir, siteConfig);
+
+            // Assert
+            // Should preserve whitespace - output should contain newlines and spaces
+            result.ShouldContain("\n");
+            result.ShouldContain("    "); // Indentation should be preserved
+            result.ShouldContain("Content   with   spaces"); // Multiple spaces should be preserved
+            result.ShouldContain("<html>");
+            result.ShouldContain("</html>");
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task BuildPageAsync_WithMinifyOutputEnabled_ByDefault_MinifiesOutput()
+    {
+        // Arrange
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        
+        var layoutsDir = Path.Combine(tempDir, "layouts");
+        Directory.CreateDirectory(layoutsDir);
+        var layoutPath = Path.Combine(layoutsDir, "default.html");
+        await File.WriteAllTextAsync(layoutPath, "<html>\n    <body>\n        {{ content }}\n    </body>\n</html>");
+        
+        var pagePath = Path.Combine(tempDir, "page.html");
+        await File.WriteAllTextAsync(pagePath, "<div>\n    <p>Content</p>\n</div>");
+
+        var siteConfig = CreateTestSiteConfig(tempDir);
+        // MinifyOutput defaults to true, so don't set it explicitly
+
+        try
+        {
+            // Act
+            var result = await PageBuilder.BuildPageAsync(pagePath, tempDir, siteConfig);
+
+            // Assert
+            // Should be minified by default
+            result.ShouldNotContain("\n");
+            result.ShouldContain("<html><body>");
+            result.ShouldContain("<div><p>Content</p></div>");
         }
         finally
         {
