@@ -112,6 +112,17 @@ public static class SiteGenerator
             await File.WriteAllTextAsync(destinationPath, html);
         }
         
+        // Generate sitemap if enabled
+        if (siteConfig.GenerateSitemap)
+        {
+            var sitemapContent = await SitemapGenerator.GenerateSitemapAsync(pages, pagesDirectory, siteConfig.BaseUrl);
+            if (sitemapContent != null)
+            {
+                var sitemapPath = Path.Combine(siteConfig.OutputDirectory, "sitemap.xml");
+                await File.WriteAllTextAsync(sitemapPath, sitemapContent);
+            }
+        }
+        
         Console.WriteLine($"Site generated to {siteConfig.OutputDirectory}");
     }
 

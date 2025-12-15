@@ -72,6 +72,16 @@ public static class ConfigParser
                 config.Description = description;
             }
 
+            if (tomlTable.TryGetValue("base_url", out var baseUrlObj) && baseUrlObj is string baseUrl)
+            {
+                config.BaseUrl = baseUrl;
+            }
+
+            if (tomlTable.TryGetValue("generate_sitemap", out var generateSitemapObj) && generateSitemapObj is bool generateSitemap)
+            {
+                config.GenerateSitemap = generateSitemap;
+            }
+
             var rootDir = Path.GetDirectoryName(configPath);
             if (rootDir == null)
             {

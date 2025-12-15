@@ -219,13 +219,17 @@ The configuration file supports the following options:
 |--------|-------------|----------|
 | `name` | Site name | No |
 | `description` | Site description | No |
+| `base_url` | Base URL for the site (used in sitemap) | No |
 
 Example:
 
 ```toml
 name = "My Blog"
 description = "A personal blog about technology and life"
+base_url = "https://example.com"
 ```
+
+**Note:** If `base_url` is not specified, sitemap URLs will use relative paths starting with `/`.
 
 ## Commands
 
@@ -343,6 +347,47 @@ dotnet run --project Genny/Genny.csproj -- build
 3. **Layout Application**: Applies layouts from the `layouts/` directory if available
 4. **Asset Copying**: Copies all files from `public/` to the build directory
 5. **Output Generation**: Writes processed pages to the `build/` directory
+6. **Sitemap Generation**: Automatically generates `sitemap.xml` with all pages
+
+## Sitemap
+
+Genny automatically generates a `sitemap.xml` file in the build directory containing all pages from your site. The sitemap includes:
+
+- **URLs**: All pages with proper paths (index.html maps to root URL)
+- **Last Modified**: File modification dates
+- **Change Frequency**: Set to "monthly" by default
+- **Priority**: Root page (index.html) gets priority 1.0, other pages get 0.8
+
+**Example sitemap.xml:**
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://example.com</loc>
+    <lastmod>2025-01-15T10:30:00Z</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://example.com/about.html</loc>
+    <lastmod>2025-01-14T09:20:00Z</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+</urlset>
+```
+
+To use a custom base URL in the sitemap, add `base_url` to your `genny.toml`:
+
+```toml
+base_url = "https://example.com"
+```
+
+# TODO?
+
+- Blog/articles support
+- RSS feed support
+- Some sort of support for 'objects' (e.g. portfolio items)
 
 ## License
 

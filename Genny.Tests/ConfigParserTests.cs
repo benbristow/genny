@@ -136,4 +136,73 @@ public class ConfigParserTests
             Directory.Delete(tempDir, recursive: true);
         }
     }
+
+    [Fact]
+    public async Task ParseConfig_WithGenerateSitemapFalse_ReturnsConfigWithGenerateSitemapFalse()
+    {
+        // Arrange
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        
+        var configPath = Path.Combine(tempDir, "genny.toml");
+        var configContent = """
+            name = "Test Site"
+            generate_sitemap = false
+            """;
+        await File.WriteAllTextAsync(configPath, configContent);
+
+        var originalDir = Directory.GetCurrentDirectory();
+        try
+        {
+            Directory.SetCurrentDirectory(tempDir);
+            
+            // Act
+            using (TestHelpers.SuppressConsoleOutput())
+            {
+                var config = await ConfigParser.ParseConfig();
+
+                // Assert
+                config.ShouldNotBeNull();
+                config.GenerateSitemap.ShouldBeFalse();
+            }
+        }
+        finally
+        {
+            Directory.SetCurrentDirectory(originalDir);
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task ParseConfig_WithoutGenerateSitemap_DefaultsToTrue()
+    {
+        // Arrange
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        
+        var configPath = Path.Combine(tempDir, "genny.toml");
+        var configContent = "name = \"Test Site\"";
+        await File.WriteAllTextAsync(configPath, configContent);
+
+        var originalDir = Directory.GetCurrentDirectory();
+        try
+        {
+            Directory.SetCurrentDirectory(tempDir);
+            
+            // Act
+            using (TestHelpers.SuppressConsoleOutput())
+            {
+                var config = await ConfigParser.ParseConfig();
+
+                // Assert
+                config.ShouldNotBeNull();
+                config.GenerateSitemap.ShouldBeTrue();
+            }
+        }
+        finally
+        {
+            Directory.SetCurrentDirectory(originalDir);
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
 }

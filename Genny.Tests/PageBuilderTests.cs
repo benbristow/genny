@@ -669,4 +669,185 @@ public class PageBuilderTests
             Directory.Delete(tempDir, recursive: true);
         }
     }
+
+    [Fact]
+    public async Task BuildPageAsync_WithPermalinkPlaceholder_ReplacesWithPageUrl()
+    {
+        // Arrange
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        
+        var pagesDir = Path.Combine(tempDir, "pages");
+        Directory.CreateDirectory(pagesDir);
+        
+        var layoutsDir = Path.Combine(tempDir, "layouts");
+        Directory.CreateDirectory(layoutsDir);
+        var layoutPath = Path.Combine(layoutsDir, "default.html");
+        await File.WriteAllTextAsync(layoutPath, "<html><head><link rel=\"canonical\" href=\"{{ permalink }}\"></head><body>{{ content }}</body></html>");
+        
+        var pagePath = Path.Combine(pagesDir, "about.html");
+        await File.WriteAllTextAsync(pagePath, "<body>About Page</body>");
+
+        var siteConfig = CreateTestSiteConfig(tempDir);
+
+        try
+        {
+            // Act
+            var result = await PageBuilder.BuildPageAsync(pagePath, tempDir, siteConfig);
+
+            // Assert
+            result.ShouldContain("href=\"/about.html\"");
+            result.ShouldNotContain("{{ permalink }}");
+            result.ShouldNotContain("{{permalink}}");
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task BuildPageAsync_WithPermalinkPlaceholder_IndexPage_ReplacesWithRootUrl()
+    {
+        // Arrange
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        
+        var pagesDir = Path.Combine(tempDir, "pages");
+        Directory.CreateDirectory(pagesDir);
+        
+        var layoutsDir = Path.Combine(tempDir, "layouts");
+        Directory.CreateDirectory(layoutsDir);
+        var layoutPath = Path.Combine(layoutsDir, "default.html");
+        await File.WriteAllTextAsync(layoutPath, "<html><head><link rel=\"canonical\" href=\"{{permalink}}\"></head><body>{{ content }}</body></html>");
+        
+        var pagePath = Path.Combine(pagesDir, "index.html");
+        await File.WriteAllTextAsync(pagePath, "<body>Home Page</body>");
+
+        var siteConfig = CreateTestSiteConfig(tempDir);
+
+        try
+        {
+            // Act
+            var result = await PageBuilder.BuildPageAsync(pagePath, tempDir, siteConfig);
+
+            // Assert
+            result.ShouldContain("href=\"/\"");
+            result.ShouldNotContain("{{permalink}}");
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task BuildPageAsync_WithPermalinkPlaceholder_SubdirectoryPage_ReplacesWithSubdirectoryUrl()
+    {
+        // Arrange
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        
+        var pagesDir = Path.Combine(tempDir, "pages");
+        Directory.CreateDirectory(pagesDir);
+        
+        var blogDir = Path.Combine(pagesDir, "blog");
+        Directory.CreateDirectory(blogDir);
+        
+        var layoutsDir = Path.Combine(tempDir, "layouts");
+        Directory.CreateDirectory(layoutsDir);
+        var layoutPath = Path.Combine(layoutsDir, "default.html");
+        await File.WriteAllTextAsync(layoutPath, "<html><head><link rel=\"canonical\" href=\"{{ permalink }}\"></head><body>{{ content }}</body></html>");
+        
+        var pagePath = Path.Combine(blogDir, "post.html");
+        await File.WriteAllTextAsync(pagePath, "<body>Blog Post</body>");
+
+        var siteConfig = CreateTestSiteConfig(tempDir);
+
+        try
+        {
+            // Act
+            var result = await PageBuilder.BuildPageAsync(pagePath, tempDir, siteConfig);
+
+            // Assert
+            result.ShouldContain("href=\"/blog/post.html\"");
+            result.ShouldNotContain("{{ permalink }}");
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task BuildPageAsync_WithPermalinkPlaceholder_WithBaseUrl_ReplacesWithFullUrl()
+    {
+        // Arrange
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        
+        var pagesDir = Path.Combine(tempDir, "pages");
+        Directory.CreateDirectory(pagesDir);
+        
+        var layoutsDir = Path.Combine(tempDir, "layouts");
+        Directory.CreateDirectory(layoutsDir);
+        var layoutPath = Path.Combine(layoutsDir, "default.html");
+        await File.WriteAllTextAsync(layoutPath, "<html><head><link rel=\"canonical\" href=\"{{permalink}}\"></head><body>{{ content }}</body></html>");
+        
+        var pagePath = Path.Combine(pagesDir, "about.html");
+        await File.WriteAllTextAsync(pagePath, "<body>About Page</body>");
+
+        var siteConfig = CreateTestSiteConfig(tempDir);
+        siteConfig.BaseUrl = "https://example.com";
+
+        try
+        {
+            // Act
+            var result = await PageBuilder.BuildPageAsync(pagePath, tempDir, siteConfig);
+
+            // Assert
+            result.ShouldContain("href=\"https://example.com/about.html\"");
+            result.ShouldNotContain("{{permalink}}");
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task BuildPageAsync_WithPermalinkPlaceholder_IndexPageWithBaseUrl_ReplacesWithBaseUrl()
+    {
+        // Arrange
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        
+        var pagesDir = Path.Combine(tempDir, "pages");
+        Directory.CreateDirectory(pagesDir);
+        
+        var layoutsDir = Path.Combine(tempDir, "layouts");
+        Directory.CreateDirectory(layoutsDir);
+        var layoutPath = Path.Combine(layoutsDir, "default.html");
+        await File.WriteAllTextAsync(layoutPath, "<html><head><link rel=\"canonical\" href=\"{{ permalink }}\"></head><body>{{ content }}</body></html>");
+        
+        var pagePath = Path.Combine(pagesDir, "index.html");
+        await File.WriteAllTextAsync(pagePath, "<body>Home Page</body>");
+
+        var siteConfig = CreateTestSiteConfig(tempDir);
+        siteConfig.BaseUrl = "https://example.com";
+
+        try
+        {
+            // Act
+            var result = await PageBuilder.BuildPageAsync(pagePath, tempDir, siteConfig);
+
+            // Assert
+            result.ShouldContain("href=\"https://example.com\"");
+            result.ShouldNotContain("{{ permalink }}");
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
 }

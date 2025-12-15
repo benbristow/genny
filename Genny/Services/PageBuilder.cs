@@ -25,6 +25,9 @@ public static partial class PageBuilder
     [GeneratedRegex(@"\{\{\s*epoch\s*\}\}", RegexOptions.IgnoreCase)]
     private static partial Regex EpochPlaceholderRegex();
 
+    [GeneratedRegex(@"\{\{\s*permalink\s*\}\}", RegexOptions.IgnoreCase)]
+    private static partial Regex PermalinkPlaceholderRegex();
+
     [GeneratedRegex(@"<!--\s*layout:\s*([^\s]+)\s*-->", RegexOptions.IgnoreCase)]
     private static partial Regex LayoutCommentRegex();
 
@@ -34,8 +37,11 @@ public static partial class PageBuilder
     [GeneratedRegex(@"<title[^>]*>(.*?)</title>", RegexOptions.IgnoreCase | RegexOptions.Singleline)]
     private static partial Regex TitleTagRegex();
 
-    [GeneratedRegex(@"<body[^>]*>(.*?)</body>", RegexOptions.IgnoreCase | RegexOptions.Singleline)]
-    private static partial Regex BodyTagRegex();
+    [GeneratedRegex(@"\s*<!--\s*layout:\s*[^\s]+\s*-->\s*", RegexOptions.IgnoreCase)]
+    private static partial Regex LayoutCommentRemovalRegex();
+
+    [GeneratedRegex(@"\s*<!--\s*title:\s*.+?\s*-->\s*", RegexOptions.IgnoreCase)]
+    private static partial Regex TitleCommentRemovalRegex();
 
     public static async Task<string> BuildPageAsync(string filePath, string rootDirectory, SiteConfig siteConfig)
     {
@@ -47,6 +53,9 @@ public static partial class PageBuilder
         // Get current year and epoch for placeholder replacement
         var currentYear = DateTime.Now.Year.ToString();
         var currentEpoch = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
+        
+        // Calculate permalink
+        var permalink = CalculatePermalink(filePath, rootDirectory, siteConfig);
         
         // Check if page specifies a layout
         var layoutName = ExtractLayoutName(pageContent);
@@ -61,21 +70,20 @@ public static partial class PageBuilder
         {
             var layoutContent = await File.ReadAllTextAsync(layoutPath);
             // Remove comments before extracting body
-            var cleanedContent = RemoveComments(pageContent);
-            var pageBody = ExtractPageBody(cleanedContent);
+            var pageBody = RemoveComments(pageContent);
             
             // Replace placeholders (handles spaces in placeholders)
-            var result = ReplacePlaceholders(layoutContent, pageBody, pageTitle, siteConfig, currentYear, currentEpoch);
+            var result = ReplacePlaceholders(layoutContent, pageBody, pageTitle, siteConfig, currentYear, currentEpoch, permalink);
             
             return result;
         }
 
         // No layout found, remove comments and replace placeholders in page content
         var cleanedPageContent = RemoveComments(pageContent);
-        return ReplacePlaceholders(cleanedPageContent, string.Empty, pageTitle, siteConfig, currentYear, currentEpoch);
+        return ReplacePlaceholders(cleanedPageContent, string.Empty, pageTitle, siteConfig, currentYear, currentEpoch, permalink);
     }
 
-    private static string ReplacePlaceholders(string content, string pageBody, string pageTitle, SiteConfig siteConfig, string currentYear, string currentEpoch)
+    private static string ReplacePlaceholders(string content, string pageBody, string pageTitle, SiteConfig siteConfig, string currentYear, string currentEpoch, string permalink)
     {
         // Use regex to replace placeholders with optional spaces
         // Matches {{placeholder}} or {{ placeholder }} or {{  placeholder  }} etc.
@@ -85,6 +93,7 @@ public static partial class PageBuilder
         result = SiteDescriptionPlaceholderRegex().Replace(result, siteConfig.Description);
         result = YearPlaceholderRegex().Replace(result, currentYear);
         result = EpochPlaceholderRegex().Replace(result, currentEpoch);
+        result = PermalinkPlaceholderRegex().Replace(result, permalink);
         
         return result;
     }
@@ -124,26 +133,6 @@ public static partial class PageBuilder
         return string.Empty;
     }
 
-    private static string ExtractPageBody(string pageContent)
-    {
-        // Extract content between <body> tags, or return full content if no body tag
-        var bodyMatch = BodyTagRegex().Match(pageContent);
-
-        if (bodyMatch is { Success: true, Groups.Count: > 1 })
-        {
-            return bodyMatch.Groups[1].Value.Trim();
-        }
-
-        // If no body tag, return the full content
-        return pageContent;
-    }
-
-    [GeneratedRegex(@"\s*<!--\s*layout:\s*[^\s]+\s*-->\s*", RegexOptions.IgnoreCase)]
-    private static partial Regex LayoutCommentRemovalRegex();
-
-    [GeneratedRegex(@"\s*<!--\s*title:\s*.+?\s*-->\s*", RegexOptions.IgnoreCase)]
-    private static partial Regex TitleCommentRemovalRegex();
-
     private static string RemoveComments(string pageContent)
     {
         // Remove layout comments: <!-- layout: layoutname.html --> (including surrounding whitespace)
@@ -153,5 +142,11 @@ public static partial class PageBuilder
         result = TitleCommentRemovalRegex().Replace(result, string.Empty);
 
         return result;
+    }
+
+    private static string CalculatePermalink(string filePath, string rootDirectory, SiteConfig siteConfig)
+    {
+        var pagesDirectory = Path.Combine(rootDirectory, "pages");
+        return PageUrlHelper.CalculatePageUrl(filePath, pagesDirectory, siteConfig.BaseUrl);
     }
 }

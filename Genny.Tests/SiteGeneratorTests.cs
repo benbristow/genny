@@ -488,4 +488,80 @@ public class SiteGeneratorTests
             Directory.Delete(tempDir, recursive: true);
         }
     }
+
+    [Fact]
+    public async Task GenerateSiteAsync_WithGenerateSitemapFalse_DoesNotGenerateSitemap()
+    {
+        // Arrange
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        
+        var pagesDir = Path.Combine(tempDir, "pages");
+        Directory.CreateDirectory(pagesDir);
+        var pagePath = Path.Combine(pagesDir, "index.html");
+        await File.WriteAllTextAsync(pagePath, "<html><body>Index</body></html>");
+
+        var siteConfig = new SiteConfig
+        {
+            RootDirectory = tempDir,
+            OutputDirectory = Path.Combine(tempDir, "build"),
+            GenerateSitemap = false
+        };
+
+        try
+        {
+            // Act
+            using (TestHelpers.SuppressConsoleOutput())
+            {
+                await SiteGenerator.GenerateSiteAsync(siteConfig);
+            }
+
+            // Assert
+            var buildDir = siteConfig.OutputDirectory;
+            var sitemapPath = Path.Combine(buildDir, "sitemap.xml");
+            File.Exists(sitemapPath).ShouldBeFalse();
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task GenerateSiteAsync_WithGenerateSitemapTrue_GeneratesSitemap()
+    {
+        // Arrange
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        
+        var pagesDir = Path.Combine(tempDir, "pages");
+        Directory.CreateDirectory(pagesDir);
+        var pagePath = Path.Combine(pagesDir, "index.html");
+        await File.WriteAllTextAsync(pagePath, "<html><body>Index</body></html>");
+
+        var siteConfig = new SiteConfig
+        {
+            RootDirectory = tempDir,
+            OutputDirectory = Path.Combine(tempDir, "build"),
+            GenerateSitemap = true
+        };
+
+        try
+        {
+            // Act
+            using (TestHelpers.SuppressConsoleOutput())
+            {
+                await SiteGenerator.GenerateSiteAsync(siteConfig);
+            }
+
+            // Assert
+            var buildDir = siteConfig.OutputDirectory;
+            var sitemapPath = Path.Combine(buildDir, "sitemap.xml");
+            File.Exists(sitemapPath).ShouldBeTrue();
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
 }
