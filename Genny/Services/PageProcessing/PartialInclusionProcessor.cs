@@ -23,6 +23,7 @@ public partial class PartialInclusionProcessor : IPageProcessor
         // Process in reverse order to maintain string indices when replacing
         var matchesList = matches.Reverse().ToList();
         
+        var includedCount = 0;
         foreach (var match in matchesList)
         {
             if (match is not { Success: true, Groups.Count: > 1 }) continue;
@@ -33,6 +34,10 @@ public partial class PartialInclusionProcessor : IPageProcessor
             if (context.IncludedPartials.Contains(partialPath))
             {
                 // Circular reference detected - remove placeholder to prevent infinite loop
+                if (context.Verbose)
+                {
+                    Console.WriteLine($"      Skipping circular reference: {partialName}");
+                }
                 result = result.Remove(match.Index, match.Length);
                 continue;
             }
@@ -46,6 +51,11 @@ public partial class PartialInclusionProcessor : IPageProcessor
                 // Load partial content
                 var partialContent = await File.ReadAllTextAsync(partialPath);
                 
+                if (context.Verbose)
+                {
+                    Console.WriteLine($"      Including partial: {partialName}");
+                }
+                
                 // Create context for partial processing
                 var partialContext = new PageProcessingContext
                 {
@@ -57,7 +67,8 @@ public partial class PartialInclusionProcessor : IPageProcessor
                     CurrentEpoch = context.CurrentEpoch,
                     Permalink = context.Permalink,
                     RootDirectory = context.RootDirectory,
-                    IncludedPartials = context.IncludedPartials
+                    IncludedPartials = context.IncludedPartials,
+                    Verbose = context.Verbose
                 };
                 
                 // Replace placeholders in partial content
@@ -71,12 +82,22 @@ public partial class PartialInclusionProcessor : IPageProcessor
                     
                 // Remove from included set after processing (allows same partial to be included multiple times in different contexts)
                 context.IncludedPartials.Remove(partialPath);
+                includedCount++;
             }
             else
             {
                 // Partial not found or directory doesn't exist - remove placeholder
+                if (context.Verbose)
+                {
+                    Console.WriteLine($"      Partial not found: {partialName}");
+                }
                 result = result.Remove(match.Index, match.Length);
             }
+        }
+        
+        if (context.Verbose && includedCount > 0)
+        {
+            Console.WriteLine($"      Included {includedCount} partial(s)");
         }
         
         context.Content = result;

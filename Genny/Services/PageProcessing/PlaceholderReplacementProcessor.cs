@@ -32,13 +32,41 @@ public partial class PlaceholderReplacementProcessor : IPageProcessor
     {
         // Use regex to replace placeholders with optional spaces
         // Matches {{placeholder}} or {{ placeholder }} or {{  placeholder  }} etc.
-        var result = ContentPlaceholderRegex().Replace(context.Content, context.PageBody);
+        var result = context.Content;
+        var replacements = 0;
+        
+        var before = result;
+        result = ContentPlaceholderRegex().Replace(result, context.PageBody);
+        if (result != before) replacements += ContentPlaceholderRegex().Matches(before).Count;
+        
+        before = result;
         result = TitlePlaceholderRegex().Replace(result, context.PageTitle);
+        if (result != before) replacements += TitlePlaceholderRegex().Matches(before).Count;
+        
+        before = result;
         result = SiteNamePlaceholderRegex().Replace(result, context.SiteConfig.Name);
+        if (result != before) replacements += SiteNamePlaceholderRegex().Matches(before).Count;
+        
+        before = result;
         result = SiteDescriptionPlaceholderRegex().Replace(result, context.SiteConfig.Description);
+        if (result != before) replacements += SiteDescriptionPlaceholderRegex().Matches(before).Count;
+        
+        before = result;
         result = YearPlaceholderRegex().Replace(result, context.CurrentYear);
+        if (result != before) replacements += YearPlaceholderRegex().Matches(before).Count;
+        
+        before = result;
         result = EpochPlaceholderRegex().Replace(result, context.CurrentEpoch);
+        if (result != before) replacements += EpochPlaceholderRegex().Matches(before).Count;
+        
+        before = result;
         result = PermalinkPlaceholderRegex().Replace(result, context.Permalink);
+        if (result != before) replacements += PermalinkPlaceholderRegex().Matches(before).Count;
+        
+        if (context.Verbose && replacements > 0)
+        {
+            Console.WriteLine($"      Replaced {replacements} placeholder(s)");
+        }
         
         context.Content = result;
         return Task.FromResult(context);

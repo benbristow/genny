@@ -45,6 +45,12 @@ public partial class MetadataExtractionProcessor : IPageProcessor
             ? layoutMatch.Groups[1].Value.Trim() 
             : DefaultLayoutName;
 
+        if (context.Verbose)
+        {
+            Console.WriteLine($"      Title: \"{context.PageTitle}\"");
+            Console.WriteLine($"      Layout: {context.LayoutName}");
+        }
+
         return Task.FromResult(context);
     }
 }

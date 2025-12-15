@@ -5,10 +5,15 @@ namespace Genny.Services;
 
 public static class PageBuilder
 {
-    public static async Task<string> BuildPageAsync(string filePath, string rootDirectory, SiteConfig siteConfig)
+    public static async Task<string> BuildPageAsync(string filePath, string rootDirectory, SiteConfig siteConfig, bool verbose = false)
     {
         // Read page content
         var pageContent = await File.ReadAllTextAsync(filePath);
+        
+        if (verbose)
+        {
+            Console.WriteLine($"  Processing: {Path.GetRelativePath(rootDirectory, filePath)}");
+        }
         
         // Create initial context
         var context = new PageProcessingContext
@@ -18,12 +23,21 @@ public static class PageBuilder
             FilePath = filePath,
             RootDirectory = rootDirectory,
             SiteConfig = siteConfig,
-            IncludedPartials = []
+            IncludedPartials = [],
+            Verbose = verbose
         };
         
         // Build and execute processing pipeline
         var pipeline = CreateProcessingPipeline(siteConfig);
         context = await pipeline.ProcessAsync(context);
+        
+        if (verbose)
+        {
+            var sizeBefore = pageContent.Length;
+            var sizeAfter = context.Content.Length;
+            var change = sizeAfter > sizeBefore ? "+" : "";
+            Console.WriteLine($"    Size: {sizeBefore} -> {sizeAfter} bytes ({change}{sizeAfter - sizeBefore})");
+        }
         
         return context.Content;
     }

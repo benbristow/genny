@@ -17,6 +17,15 @@ public class LayoutApplicationProcessor : IPageProcessor
             // Set layout content as the main content, and page body as the body
             context.Content = layoutContent;
             // PageBody is already set from previous processing
+            
+            if (context.Verbose)
+            {
+                Console.WriteLine($"      Applied layout: {context.LayoutName}");
+            }
+        }
+        else if (context.Verbose)
+        {
+            Console.WriteLine($"      Layout not found: {context.LayoutName} (using page content as-is)");
         }
 
         // If layout doesn't exist, content remains as-is (no layout applied)

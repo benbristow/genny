@@ -16,6 +16,7 @@ public class MinifierProcessor : IPageProcessor
             return Task.FromResult(context);
         }
 
+        var originalSize = context.Content.Length;
         var result = Minifier.Minify(context.Content);
         
         // Use minified content if available, otherwise fall back to original
@@ -23,6 +24,23 @@ public class MinifierProcessor : IPageProcessor
         if (!string.IsNullOrEmpty(result.MinifiedContent))
         {
             context.Content = result.MinifiedContent;
+            
+            if (context.Verbose)
+            {
+                var newSize = result.MinifiedContent.Length;
+                var reduction = originalSize - newSize;
+                var percent = originalSize > 0 ? (reduction * 100.0 / originalSize) : 0;
+                Console.WriteLine($"      Minified: {originalSize} -> {newSize} bytes ({percent:F1}% reduction)");
+                
+                if (result.Errors.Count > 0)
+                {
+                    Console.WriteLine($"      Minification warnings: {result.Errors.Count}");
+                }
+            }
+        }
+        else if (context.Verbose)
+        {
+            Console.WriteLine($"      Minification failed, using original content");
         }
         // If minification completely fails, keep original content
         

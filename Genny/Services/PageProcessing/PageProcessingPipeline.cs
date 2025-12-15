@@ -23,6 +23,11 @@ public class PageProcessingPipeline
     {
         foreach (var processor in _processors)
         {
+            if (context.Verbose)
+            {
+                Console.WriteLine($"    Running: {processor.GetType().Name}");
+            }
+            
             context = await processor.ProcessAsync(context);
         }
         

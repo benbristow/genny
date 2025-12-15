@@ -71,4 +71,9 @@ public class PageProcessingContext
     /// The extracted layout name to be applied to the page (e.g., "default.html").
     /// </summary>
     public string LayoutName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Whether verbose logging is enabled.
+    /// </summary>
+    public bool Verbose { get; set; } = false;
 }

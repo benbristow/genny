@@ -20,14 +20,7 @@ public class BuildSiteCommand : ICommand
             return;
         }
 
-        if (Verbose)
-        {
-            await console.Output.WriteLineAsync($"Site name: {siteConfig.Name}");
-            await console.Output.WriteLineAsync($"Site description: {siteConfig.Description}");
-        }
-
         await SiteGenerator.GenerateSiteAsync(siteConfig, Verbose);
-        await console.Output.WriteLineAsync("Building site");
 
     }
 }

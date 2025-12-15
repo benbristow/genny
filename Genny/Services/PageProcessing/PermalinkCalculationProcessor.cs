@@ -15,6 +15,11 @@ public class PermalinkCalculationProcessor : IPageProcessor
         var pagesDirectory = Path.Combine(context.RootDirectory, "pages");
         context.Permalink = PageUrlHelper.CalculatePageUrl(context.FilePath, pagesDirectory, context.SiteConfig.BaseUrl);
         
+        if (context.Verbose)
+        {
+            Console.WriteLine($"      Permalink: {context.Permalink}");
+        }
+        
         return Task.FromResult(context);
     }
 }

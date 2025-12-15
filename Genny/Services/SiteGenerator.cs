@@ -45,8 +45,13 @@ public static class SiteGenerator
         
         if (verbose)
         {
-            Console.WriteLine($"Root directory: {siteConfig.RootDirectory}");
-            Console.WriteLine($"Output directory: {siteConfig.OutputDirectory}");
+            Console.WriteLine($"Configuration:");
+            Console.WriteLine($"  Root directory: {siteConfig.RootDirectory}");
+            Console.WriteLine($"  Output directory: {siteConfig.OutputDirectory}");
+            Console.WriteLine($"  Site name: {siteConfig.Name}");
+            Console.WriteLine($"  Minify output: {siteConfig.MinifyOutput}");
+            Console.WriteLine($"  Generate sitemap: {siteConfig.GenerateSitemap}");
+            Console.WriteLine();
         }
         
         // Clean out build directory first
@@ -66,14 +71,22 @@ public static class SiteGenerator
         var publicDirectory = Path.Combine(siteConfig.RootDirectory, "public");
         if (Directory.Exists(publicDirectory))
         {
-            CopyDirectoryContents(publicDirectory, siteConfig.OutputDirectory);
             if (verbose)
             {
-                Console.WriteLine("Copied public folder contents to build directory");
+                Console.WriteLine("Copying public assets...");
+            }
+            var copiedFiles = CopyDirectoryContents(publicDirectory, siteConfig.OutputDirectory, verbose);
+            if (verbose)
+            {
+                Console.WriteLine($"  Copied {copiedFiles} file(s) from public directory");
             }
         }
         
-        Console.WriteLine($"Found {pages.Count} pages");
+        Console.WriteLine($"Found {pages.Count} page(s)");
+        if (verbose)
+        {
+            Console.WriteLine();
+        }
         
         foreach (var pagePath in pages)
         {
@@ -108,21 +121,38 @@ public static class SiteGenerator
             }
             
             // Build the page and copy to build directory
-            var html = await PageBuilder.BuildPageAsync(pagePath, siteConfig.RootDirectory, siteConfig);
+            var html = await PageBuilder.BuildPageAsync(pagePath, siteConfig.RootDirectory, siteConfig, verbose);
             await File.WriteAllTextAsync(destinationPath, html);
+            
+            if (verbose)
+            {
+                Console.WriteLine($"    Written: {Path.GetRelativePath(siteConfig.OutputDirectory, destinationPath)}");
+            }
         }
         
         // Generate sitemap if enabled
         if (siteConfig.GenerateSitemap)
         {
+            if (verbose)
+            {
+                Console.WriteLine("Generating sitemap.xml...");
+            }
             var sitemapContent = await SitemapGenerator.GenerateSitemapAsync(pages, pagesDirectory, siteConfig.BaseUrl);
             if (sitemapContent != null)
             {
                 var sitemapPath = Path.Combine(siteConfig.OutputDirectory, "sitemap.xml");
                 await File.WriteAllTextAsync(sitemapPath, sitemapContent);
+                if (verbose)
+                {
+                    Console.WriteLine($"  Created: sitemap.xml");
+                }
             }
         }
         
+        if (verbose)
+        {
+            Console.WriteLine();
+        }
         Console.WriteLine($"Site generated to {siteConfig.OutputDirectory}");
     }
 
@@ -161,8 +191,10 @@ public static class SiteGenerator
         return pages;
     }
 
-    private static void CopyDirectoryContents(string sourceDir, string destinationDir)
+    private static int CopyDirectoryContents(string sourceDir, string destinationDir, bool verbose = false)
     {
+        var fileCount = 0;
+        
         // Create destination directory if it doesn't exist
         Directory.CreateDirectory(destinationDir);
 
@@ -177,6 +209,13 @@ public static class SiteGenerator
             
             var destFile = Path.Combine(destinationDir, fileName);
             File.Copy(file, destFile, overwrite: true);
+            fileCount++;
+            
+            if (verbose)
+            {
+                var relativePath = Path.GetRelativePath(sourceDir, file);
+                Console.WriteLine($"    Copied: {relativePath}");
+            }
         }
 
         // Recursively copy subdirectories (skip ignored directories)
@@ -189,8 +228,10 @@ public static class SiteGenerator
             }
             
             var destSubDir = Path.Combine(destinationDir, dirName);
-            CopyDirectoryContents(subDir, destSubDir);
+            fileCount += CopyDirectoryContents(subDir, destSubDir, verbose);
         }
+        
+        return fileCount;
     }
     
     private static bool ShouldIgnoreFile(string fileName)
