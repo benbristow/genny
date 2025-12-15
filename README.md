@@ -6,6 +6,25 @@ A static site generator built with .NET that transforms your HTML pages and asse
 
 For people that want to generate websites and don't want a headache of configuring a complex static site generator. Plays nicely with JavaScript asset management tools like Vite/Parcel/Webpack if that's what you want.
 
+## Quick Start
+
+**Using Docker (easiest):**
+
+```bash
+# Pull the image
+docker pull ghcr.io/benbristow/genny:latest
+
+# Build your site (run from your project root)
+docker run --rm -v "$(pwd):/workspace" -w /workspace ghcr.io/benbristow/genny:latest build
+```
+
+**Or create an alias:**
+
+```bash
+alias genny='docker run --rm -v "$(pwd):/workspace" -w /workspace ghcr.io/benbristow/genny:latest'
+genny build
+```
+
 ## Features
 
 - 🚀 **Simple and Fast** - Build static sites quickly with minimal configuration
@@ -18,11 +37,32 @@ For people that want to generate websites and don't want a headache of configuri
 
 ## Installation
 
-### Prerequisites
+### Using Docker (Recommended)
 
-- .NET 10.0 SDK or later
+Pull the Docker image from GitHub Container Registry:
+
+```bash
+docker pull ghcr.io/benbristow/genny:latest
+```
+
+Or use a specific version:
+
+```bash
+docker pull ghcr.io/benbristow/genny:main
+```
+
+### Using the CLI Binary
+
+Download the latest release binary for your platform from the [GitHub Actions artifacts](https://github.com/benbristow/genny/actions) or build from source.
+
+### Using GitHub Actions
+
+Use the [Genny GitHub Action](https://github.com/benbristow/genny-action) in your CI/CD workflows. See the [Using GitHub Actions](#using-github-actions) section below for detailed instructions.
 
 ### Build from Source
+
+**Prerequisites:**
+- .NET 10.0 SDK or later
 
 ```bash
 git clone <repository-url>
@@ -74,19 +114,122 @@ Create `pages/index.html`:
 
 ### 4. Build Your Site
 
-Run the build command from your project root:
+**Using Docker:**
 
 ```bash
-dotnet run --project Genny/Genny.csproj -- build
+# From your project root directory
+docker run --rm -v "$(pwd):/workspace" -w /workspace ghcr.io/benbristow/genny:latest build
 ```
 
-Or if you've installed Genny globally:
+Or create an alias for convenience:
+
+```bash
+alias genny='docker run --rm -v "$(pwd):/workspace" -w /workspace ghcr.io/benbristow/genny:latest'
+genny build
+```
+
+**Using the CLI Binary:**
+
+If you've downloaded the binary:
+
+```bash
+./genny build
+```
+
+Or if installed globally:
 
 ```bash
 genny build
 ```
 
+**Using .NET directly:**
+
+```bash
+dotnet run --project Genny/Genny.csproj -- build
+```
+
+**Verbose output:**
+
+Add the `-v` or `--verbose` flag for detailed build information:
+
+```bash
+# Docker
+docker run --rm -v "$(pwd):/workspace" -w /workspace ghcr.io/benbristow/genny:latest build -v
+
+# CLI
+genny build -v
+```
+
 Your site will be generated in the `build/` directory.
+
+### Using GitHub Actions
+
+You can use the [Genny GitHub Action](https://github.com/benbristow/genny-action) to automatically build your site in CI/CD pipelines.
+
+**Basic Usage:**
+
+Create a `.github/workflows/build.yml` file in your repository:
+
+```yaml
+name: Build Site
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Build site with Genny
+        uses: benbristow/genny-action@v1
+```
+
+**With Custom Working Directory:**
+
+If your Genny site files are in a subdirectory:
+
+```yaml
+- name: Build site with Genny
+  uses: benbristow/genny-action@v1
+  with:
+    working-directory: './site'
+```
+
+**With Deployment:**
+
+You can use the build directory output for deployment:
+
+```yaml
+- name: Build site with Genny
+  id: genny
+  uses: benbristow/genny-action@v1
+
+- name: Deploy to GitHub Pages
+  uses: peaceiris/actions-gh-pages@v3
+  with:
+    publish_dir: ${{ steps.genny.outputs.build-directory }}
+```
+
+**Available Inputs:**
+
+| Input             | Description                      | Required | Default                             |
+| ----------------- | -------------------------------- | -------- | ----------------------------------- |
+| `repository`      | Repository URL to clone          | No       | `https://github.com/benbristow/genny` |
+| `working-directory` | Working directory for the action | No       | `.`                                 |
+
+**Available Outputs:**
+
+| Output          | Description                        |
+| --------------- | ---------------------------------- |
+| `build-directory` | Directory where the site was built |
+
+For more information, see the [Genny Action repository](https://github.com/benbristow/genny-action).
 
 ## Project Structure
 
@@ -321,12 +464,30 @@ base_url = "https://example.com"
 
 Build your static site:
 
+**Using Docker:**
+```bash
+docker run --rm -v "$(pwd):/workspace" -w /workspace ghcr.io/benbristow/genny:latest build
+```
+
+**Using CLI:**
 ```bash
 genny build
 ```
 
-Options:
+**Options:**
 - `-v, --verbose` - Enable verbose output (shows detailed build information including file paths and directory operations)
+
+**Examples:**
+
+```bash
+# Build with verbose output (Docker)
+docker run --rm -v "$(pwd):/workspace" -w /workspace ghcr.io/benbristow/genny:latest build -v
+
+# Build with verbose output (CLI)
+genny build -v
+```
+
+**Note:** When using Docker, make sure you're running the command from your project root directory (where `genny.toml` is located). The Docker container mounts your current directory and runs the build command inside it.
 
 ## Ignored Files and Directories
 
