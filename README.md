@@ -481,9 +481,9 @@ The configuration file supports the following options:
 | `description` | Site description | No | `""` |
 | `base_url` | Base URL for the site (used in sitemap and permalinks) | No | `null` |
 | `generate_sitemap` | Whether to generate sitemap.xml | No | `true` |
-| `minify_output` | Whether to minify HTML output by removing unnecessary whitespace | No | `true` |
+| `minify_output` | Whether to minify HTML output by removing unnecessary whitespace | No | `false` |
 
-**Note:** Minification removes unnecessary whitespace, newlines, and collapses multiple spaces. Disable it (`minify_output = false`) if you want to preserve formatting for readability during development or debugging.
+**Note:** Minification removes unnecessary whitespace, newlines, and collapses multiple spaces. Enable it (`minify_output = true`) for production builds to reduce file sizes. By default, minification is disabled to preserve formatting for readability during development.
 
 Example:
 

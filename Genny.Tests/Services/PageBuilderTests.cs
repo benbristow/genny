@@ -293,6 +293,7 @@ public class PageBuilderTests
         await File.WriteAllTextAsync(pagePath, "<body>Content</body>");
 
         var siteConfig = CreateTestSiteConfig(tempDir);
+        siteConfig.MinifyOutput = true; // Enable minification for this test
 
         try
         {
@@ -1155,6 +1156,7 @@ public class PageBuilderTests
         await File.WriteAllTextAsync(pagePath, "<div>\n    <p>   Content   with   spaces   </p>\n</div>");
 
         var siteConfig = CreateTestSiteConfig(tempDir);
+        siteConfig.MinifyOutput = true; // Explicitly enable minification for this test
 
         try
         {
@@ -1216,7 +1218,7 @@ public class PageBuilderTests
     }
 
     [Fact]
-    public async Task BuildPageAsync_WithMinifyOutputEnabled_ByDefault_MinifiesOutput()
+    public async Task BuildPageAsync_WithMinifyOutputDisabled_ByDefault_PreservesWhitespace()
     {
         // Arrange
         var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
@@ -1231,7 +1233,7 @@ public class PageBuilderTests
         await File.WriteAllTextAsync(pagePath, "<div>\n    <p>Content</p>\n</div>");
 
         var siteConfig = CreateTestSiteConfig(tempDir);
-        // MinifyOutput defaults to true, so don't set it explicitly
+        // MinifyOutput defaults to false, so don't set it explicitly
 
         try
         {
@@ -1239,7 +1241,41 @@ public class PageBuilderTests
             var result = await PageBuilder.BuildPageAsync(pagePath, tempDir, siteConfig);
 
             // Assert
-            // Should be minified by default
+            // Should preserve whitespace by default
+            result.ShouldContain("\n");
+            result.ShouldContain("    "); // Indentation should be preserved
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task BuildPageAsync_WithMinifyOutputEnabled_Explicitly_MinifiesOutput()
+    {
+        // Arrange
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        
+        var layoutsDir = Path.Combine(tempDir, "layouts");
+        Directory.CreateDirectory(layoutsDir);
+        var layoutPath = Path.Combine(layoutsDir, "default.html");
+        await File.WriteAllTextAsync(layoutPath, "<html>\n    <body>\n        {{ content }}\n    </body>\n</html>");
+        
+        var pagePath = Path.Combine(tempDir, "page.html");
+        await File.WriteAllTextAsync(pagePath, "<div>\n    <p>Content</p>\n</div>");
+
+        var siteConfig = CreateTestSiteConfig(tempDir);
+        siteConfig.MinifyOutput = true; // Explicitly enable minification
+
+        try
+        {
+            // Act
+            var result = await PageBuilder.BuildPageAsync(pagePath, tempDir, siteConfig);
+
+            // Assert
+            // Should be minified when explicitly enabled
             result.ShouldNotContain("\n");
             result.ShouldContain("<html><body>");
             result.ShouldContain("<div><p>Content</p></div>");

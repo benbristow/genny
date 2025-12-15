@@ -37,7 +37,7 @@ public class SiteConfig
     public bool GenerateSitemap { get; set; } = true;
 
     /// <summary>
-    /// Whether to minify HTML output by removing unnecessary whitespace (defaults to true).
+    /// Whether to minify HTML output by removing unnecessary whitespace (defaults to false).
     /// </summary>
-    public bool MinifyOutput { get; set; } = true;
+    public bool MinifyOutput { get; set; } = false;
 }

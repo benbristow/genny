@@ -243,7 +243,7 @@ public class ConfigParserTests
     }
 
     [Fact]
-    public async Task ParseConfig_WithoutMinifyOutput_DefaultsToTrue()
+    public async Task ParseConfig_WithoutMinifyOutput_DefaultsToFalse()
     {
         // Arrange
         var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
@@ -265,7 +265,7 @@ public class ConfigParserTests
 
                 // Assert
                 config.ShouldNotBeNull();
-                config.MinifyOutput.ShouldBeTrue();
+                config.MinifyOutput.ShouldBeFalse();
             }
         }
         finally
