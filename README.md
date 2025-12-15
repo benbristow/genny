@@ -15,15 +15,18 @@ For people that want to generate websites and don't want a headache of configuri
 docker pull ghcr.io/benbristow/genny:latest
 
 # Build your site (run from your project root)
-docker run --rm -v "$(pwd):/workspace" -w /workspace ghcr.io/benbristow/genny:latest build
+# Use --user flag to run as current user (prevents permission issues with build directory)
+docker run --rm --user "$(id -u):$(id -g)" -v "$(pwd):/workspace" -w /workspace ghcr.io/benbristow/genny:latest build
 ```
 
 **Or create an alias:**
 
 ```bash
-alias genny='docker run --rm -v "$(pwd):/workspace" -w /workspace ghcr.io/benbristow/genny:latest'
+alias genny='docker run --rm --user "$(id -u):$(id -g)" -v "$(pwd):/workspace" -w /workspace ghcr.io/benbristow/genny:latest'
 genny build
 ```
+
+**Note:** The `--user "$(id -u):$(id -g)"` flag ensures the container runs as your current user, so the `build/` directory will have the correct permissions and you won't need `sudo` to modify files.
 
 **Building locally:**
 
@@ -34,7 +37,8 @@ If you prefer to build the image locally:
 docker build -t genny:latest https://github.com/benbristow/genny.git
 
 # Build your site (run from your project root)
-docker run --rm -v "$(pwd):/workspace" -w /workspace genny:latest build
+# Use --user flag to run as current user (prevents permission issues)
+docker run --rm --user "$(id -u):$(id -g)" -v "$(pwd):/workspace" -w /workspace genny:latest build
 ```
 
 ## Features
@@ -78,6 +82,16 @@ git clone https://github.com/benbristow/genny.git
 cd genny
 docker build -t genny:latest .
 ```
+
+**Running as Current User:**
+
+By default, Docker containers run as root, which means files created in the `build/` directory will be owned by root. To avoid permission issues, always use the `--user` flag:
+
+```bash
+docker run --rm --user "$(id -u):$(id -g)" -v "$(pwd):/workspace" -w /workspace ghcr.io/benbristow/genny:latest build
+```
+
+This runs the container with your current user ID and group ID, ensuring all generated files have the correct ownership.
 
 ### Using the CLI Binary
 
@@ -146,20 +160,24 @@ Create `pages/index.html`:
 
 ```bash
 # From your project root directory
-docker run --rm -v "$(pwd):/workspace" -w /workspace ghcr.io/benbristow/genny:latest build
+# Use --user flag to run as current user (prevents permission issues)
+docker run --rm --user "$(id -u):$(id -g)" -v "$(pwd):/workspace" -w /workspace ghcr.io/benbristow/genny:latest build
 ```
 
 Or create an alias for convenience:
 
 ```bash
-alias genny='docker run --rm -v "$(pwd):/workspace" -w /workspace ghcr.io/benbristow/genny:latest'
+alias genny='docker run --rm --user "$(id -u):$(id -g)" -v "$(pwd):/workspace" -w /workspace ghcr.io/benbristow/genny:latest'
 genny build
 ```
+
+**Important:** The `--user "$(id -u):$(id -g)"` flag runs the container as your current user instead of root. This ensures the `build/` directory and all generated files have the correct ownership, so you can modify them without `sudo`.
 
 **Using locally built image:**
 
 ```bash
-docker run --rm -v "$(pwd):/workspace" -w /workspace genny:latest build
+# Use --user flag to run as current user
+docker run --rm --user "$(id -u):$(id -g)" -v "$(pwd):/workspace" -w /workspace genny:latest build
 ```
 
 **Using the CLI Binary:**
@@ -188,10 +206,10 @@ Add the `-v` or `--verbose` flag for detailed build information:
 
 ```bash
 # Docker (ghcr.io)
-docker run --rm -v "$(pwd):/workspace" -w /workspace ghcr.io/benbristow/genny:latest build -v
+docker run --rm --user "$(id -u):$(id -g)" -v "$(pwd):/workspace" -w /workspace ghcr.io/benbristow/genny:latest build -v
 
 # Docker (locally built)
-docker run --rm -v "$(pwd):/workspace" -w /workspace genny:latest build -v
+docker run --rm --user "$(id -u):$(id -g)" -v "$(pwd):/workspace" -w /workspace genny:latest build -v
 
 # CLI
 genny build -v
@@ -483,7 +501,7 @@ The configuration file supports the following options:
 | `generate_sitemap` | Whether to generate sitemap.xml | No | `true` |
 | `minify_output` | Whether to minify HTML output by removing unnecessary whitespace | No | `false` |
 
-**Note:** Minification removes unnecessary whitespace, newlines, and collapses multiple spaces. Enable it (`minify_output = true`) for production builds to reduce file sizes. By default, minification is disabled to preserve formatting for readability during development.
+**Note:** Minification uses [WebMarkupMin](https://github.com/Taritsyn/WebMarkupMin) to remove unnecessary whitespace, newlines, and collapse multiple spaces. It also optimizes HTML structure (e.g., removes optional closing tags per HTML5 spec). Enable it (`minify_output = true`) for production builds to reduce file sizes. By default, minification is disabled to preserve formatting for readability during development.
 
 Example:
 
@@ -503,7 +521,8 @@ Build your static site:
 
 **Using Docker:**
 ```bash
-docker run --rm -v "$(pwd):/workspace" -w /workspace ghcr.io/benbristow/genny:latest build
+# Use --user flag to run as current user (prevents permission issues)
+docker run --rm --user "$(id -u):$(id -g)" -v "$(pwd):/workspace" -w /workspace ghcr.io/benbristow/genny:latest build
 ```
 
 **Using CLI:**
@@ -518,13 +537,15 @@ genny build
 
 ```bash
 # Build with verbose output (Docker)
-docker run --rm -v "$(pwd):/workspace" -w /workspace ghcr.io/benbristow/genny:latest build -v
+docker run --rm --user "$(id -u):$(id -g)" -v "$(pwd):/workspace" -w /workspace ghcr.io/benbristow/genny:latest build -v
 
 # Build with verbose output (CLI)
 genny build -v
 ```
 
 **Note:** When using Docker, make sure you're running the command from your project root directory (where `genny.toml` is located). The Docker container mounts your current directory and runs the build command inside it.
+
+**Permission Issues:** If you encounter permission errors when trying to modify files in the `build/` directory, make sure you're using the `--user "$(id -u):$(id -g)"` flag. Without it, Docker runs as root and creates files owned by root, requiring `sudo` to modify them.
 
 ## Ignored Files and Directories
 

@@ -11,6 +11,7 @@
     <ItemGroup>
         <PackageReference Include="CliFx" Version="2.3.6" />
         <PackageReference Include="Tomlyn" Version="0.19.0" />
+        <PackageReference Include="WebMarkupMin.Core" Version="2.20.1" />
     </ItemGroup>
 
 </Project>

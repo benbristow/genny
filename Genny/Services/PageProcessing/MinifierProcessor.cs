@@ -1,45 +1,31 @@
-using System.Text.RegularExpressions;
+using WebMarkupMin.Core;
 
 namespace Genny.Services.PageProcessing;
 
 /// <summary>
-/// Processor that minifies HTML content by removing unnecessary whitespace.
+/// Processor that minifies HTML content using WebMarkupMin.
 /// </summary>
-public partial class MinifierProcessor : IPageProcessor
+public class MinifierProcessor : IPageProcessor
 {
-    [GeneratedRegex(@">\s+<", RegexOptions.Multiline)]
-    private static partial Regex WhitespaceBetweenTagsRegex();
-
-    [GeneratedRegex(@">\s+", RegexOptions.Multiline)]
-    private static partial Regex WhitespaceAfterOpeningTagRegex();
-
-    [GeneratedRegex(@"\s+<", RegexOptions.Multiline)]
-    private static partial Regex WhitespaceBeforeClosingTagRegex();
-
-    [GeneratedRegex(@"\s+", RegexOptions.Multiline)]
-    private static partial Regex MultipleWhitespaceRegex();
+    private static readonly HtmlMinifier Minifier = new HtmlMinifier();
 
     public Task<PageProcessingContext> ProcessAsync(PageProcessingContext context)
     {
-        var result = context.Content;
+        if (string.IsNullOrWhiteSpace(context.Content))
+        {
+            return Task.FromResult(context);
+        }
 
-        // Remove whitespace between HTML tags (e.g., ">  <" becomes "><")
-        result = WhitespaceBetweenTagsRegex().Replace(result, "><");
-
-        // Remove whitespace immediately after opening tags (e.g., ">  Text" becomes ">Text")
-        result = WhitespaceAfterOpeningTagRegex().Replace(result, ">");
-
-        // Remove whitespace immediately before closing tags (e.g., "Text  <" becomes "Text<")
-        result = WhitespaceBeforeClosingTagRegex().Replace(result, "<");
-
-        // Collapse multiple whitespace characters (spaces, tabs, newlines) to single spaces
-        // This preserves single spaces in text content while removing excess whitespace
-        result = MultipleWhitespaceRegex().Replace(result, " ");
-
-        // Trim the entire result
-        result = result.Trim();
-
-        context.Content = result;
+        var result = Minifier.Minify(context.Content);
+        
+        // Use minified content if available, otherwise fall back to original
+        // WebMarkupMin may produce warnings but still provide minified content
+        if (!string.IsNullOrEmpty(result.MinifiedContent))
+        {
+            context.Content = result.MinifiedContent;
+        }
+        // If minification completely fails, keep original content
+        
         return Task.FromResult(context);
     }
 }
