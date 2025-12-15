@@ -430,3 +430,6 @@ FodyWeavers.xsd
 # Rider
 .idea/
 .DotSettings.User
+
+# Demosite build
+demosite/build/

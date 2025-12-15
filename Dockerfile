@@ -1,17 +1,13 @@
 # -----------------
-# 1. Build stage
+# Build and runtime using SDK image
 # -----------------
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
-WORKDIR /src/Genny
+FROM mcr.microsoft.com/dotnet/sdk:10.0
+WORKDIR /app
 COPY Genny/Genny.csproj .
 RUN dotnet restore
-COPY . .
-RUN dotnet publish -c Release -o /app/publish --no-restore --self-contained false
+COPY Genny/ .
+RUN dotnet publish -c Release -o /app/publish --no-restore
 
-# -----------------
-# 2. Runtime stage
-# -----------------
-# Use the lighter runtime image
-FROM mcr.microsoft.com/dotnet/runtime:10.0 AS final
-WORKDIR /app
-ENTRYPOINT ["dotnet", "Genny.dll"]
+WORKDIR /app/publish
+ENTRYPOINT ["/app/publish/Genny"]
+CMD ["--help"]

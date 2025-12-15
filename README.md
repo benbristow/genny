@@ -25,6 +25,18 @@ alias genny='docker run --rm -v "$(pwd):/workspace" -w /workspace ghcr.io/benbri
 genny build
 ```
 
+**Building locally:**
+
+If you prefer to build the image locally:
+
+```bash
+# Build the image locally (one-time setup)
+docker build -t genny:latest https://github.com/benbristow/genny.git
+
+# Build your site (run from your project root)
+docker run --rm -v "$(pwd):/workspace" -w /workspace genny:latest build
+```
+
 ## Features
 
 - 🚀 **Simple and Fast** - Build static sites quickly with minimal configuration
@@ -49,6 +61,22 @@ Or use a specific version:
 
 ```bash
 docker pull ghcr.io/benbristow/genny:main
+```
+
+**Building locally:**
+
+Alternatively, build the Docker image locally from the repository:
+
+```bash
+docker build -t genny:latest https://github.com/benbristow/genny.git
+```
+
+Or clone the repository and build from your local copy:
+
+```bash
+git clone https://github.com/benbristow/genny.git
+cd genny
+docker build -t genny:latest .
 ```
 
 ### Using the CLI Binary
@@ -128,6 +156,12 @@ alias genny='docker run --rm -v "$(pwd):/workspace" -w /workspace ghcr.io/benbri
 genny build
 ```
 
+**Using locally built image:**
+
+```bash
+docker run --rm -v "$(pwd):/workspace" -w /workspace genny:latest build
+```
+
 **Using the CLI Binary:**
 
 If you've downloaded the binary:
@@ -153,8 +187,11 @@ dotnet run --project Genny/Genny.csproj -- build
 Add the `-v` or `--verbose` flag for detailed build information:
 
 ```bash
-# Docker
+# Docker (ghcr.io)
 docker run --rm -v "$(pwd):/workspace" -w /workspace ghcr.io/benbristow/genny:latest build -v
+
+# Docker (locally built)
+docker run --rm -v "$(pwd):/workspace" -w /workspace genny:latest build -v
 
 # CLI
 genny build -v
