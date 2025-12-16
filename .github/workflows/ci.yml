@@ -36,19 +36,6 @@ jobs:
         dotnet tool install -g dotnet-reportgenerator-globaltool || true
         reportgenerator -reports:"${{ runner.temp }}/TestResults/**/coverage.cobertura.xml" -targetdir:"coverage" -reporttypes:"Html;Cobertura;JsonSummary" || echo "Report generation failed"
     
-    - name: Display coverage summary
-      run: |
-        if [ -f "coverage/Summary.json" ]; then
-          echo "## Code Coverage Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          COVERAGE=$(jq -r '.summary.linecoverage' coverage/Summary.json 2>/dev/null || echo "N/A")
-          BRANCH_COVERAGE=$(jq -r '.summary.branchcoverage' coverage/Summary.json 2>/dev/null || echo "N/A")
-          echo "**Line Coverage:** ${COVERAGE}%" >> $GITHUB_STEP_SUMMARY
-          echo "**Branch Coverage:** ${BRANCH_COVERAGE}%" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Coverage report available in artifacts." >> $GITHUB_STEP_SUMMARY
-        fi
-    
     - name: Upload coverage report artifact
       uses: actions/upload-artifact@v4
       continue-on-error: true
