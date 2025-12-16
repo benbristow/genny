@@ -29,7 +29,7 @@ jobs:
       run: dotnet build --no-restore
     
     - name: Test with coverage
-      run: dotnet test --no-build --verbosity normal --collect:"XPlat Code Coverage" --results-directory:"${{ runner.temp }}/TestResults"
+      run: dotnet test --no-build --verbosity normal --collect:"XPlat Code Coverage" --results-directory:"${{ runner.temp }}/TestResults" --settings Genny.Tests/coverlet.runsettings
     
     - name: Generate coverage report
       run: |
