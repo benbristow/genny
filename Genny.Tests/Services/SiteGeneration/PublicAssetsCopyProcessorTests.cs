@@ -219,4 +219,309 @@ public class PublicAssetsCopyProcessorTests
             Directory.Delete(tempDir, recursive: true);
         }
     }
+
+    [Fact]
+    public async Task ProcessAsync_WithVerboseFlag_LogsCopyingMessage()
+    {
+        // Arrange
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        
+        var publicDir = Path.Combine(tempDir, "public");
+        Directory.CreateDirectory(publicDir);
+        
+        var buildDir = Path.Combine(tempDir, "build");
+        Directory.CreateDirectory(buildDir);
+        
+        var cssFile = Path.Combine(publicDir, "style.css");
+        await File.WriteAllTextAsync(cssFile, "body { color: red; }");
+
+        var context = new SiteGenerationContext
+        {
+            SiteConfig = new SiteConfig
+            {
+                RootDirectory = tempDir,
+                OutputDirectory = buildDir
+            },
+            Verbose = true
+        };
+
+        try
+        {
+            using (TestHelpers.SuppressConsoleOutput())
+            {
+                var stringWriter = new StringWriter();
+                Console.SetOut(stringWriter);
+
+                // Act
+                await new PublicAssetsCopyProcessor().ProcessAsync(context);
+
+                // Assert
+                var output = stringWriter.ToString();
+                output.ShouldContain("Copying public assets");
+                output.ShouldContain("Copied");
+                output.ShouldContain("file(s)");
+            }
+        }
+        finally
+        {
+            Console.SetOut(new StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true });
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task ProcessAsync_WithVerboseFlag_LogsIndividualFilePaths()
+    {
+        // Arrange
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        
+        var publicDir = Path.Combine(tempDir, "public");
+        Directory.CreateDirectory(publicDir);
+        
+        var buildDir = Path.Combine(tempDir, "build");
+        Directory.CreateDirectory(buildDir);
+        
+        var cssFile = Path.Combine(publicDir, "style.css");
+        await File.WriteAllTextAsync(cssFile, "body { color: red; }");
+        
+        var jsFile = Path.Combine(publicDir, "script.js");
+        await File.WriteAllTextAsync(jsFile, "console.log('test');");
+
+        var context = new SiteGenerationContext
+        {
+            SiteConfig = new SiteConfig
+            {
+                RootDirectory = tempDir,
+                OutputDirectory = buildDir
+            },
+            Verbose = true
+        };
+
+        try
+        {
+            using (TestHelpers.SuppressConsoleOutput())
+            {
+                var stringWriter = new StringWriter();
+                Console.SetOut(stringWriter);
+
+                // Act
+                await new PublicAssetsCopyProcessor().ProcessAsync(context);
+
+                // Assert
+                var output = stringWriter.ToString();
+                output.ShouldContain("Copied: style.css");
+                output.ShouldContain("Copied: script.js");
+            }
+        }
+        finally
+        {
+            Console.SetOut(new StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true });
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task ProcessAsync_WithVerboseFlag_LogsSubdirectoryFilePaths()
+    {
+        // Arrange
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        
+        var publicDir = Path.Combine(tempDir, "public");
+        Directory.CreateDirectory(publicDir);
+        
+        var imagesDir = Path.Combine(publicDir, "images");
+        Directory.CreateDirectory(imagesDir);
+        
+        var buildDir = Path.Combine(tempDir, "build");
+        Directory.CreateDirectory(buildDir);
+        
+        var imageFile = Path.Combine(imagesDir, "logo.png");
+        await File.WriteAllTextAsync(imageFile, "fake image data");
+
+        var context = new SiteGenerationContext
+        {
+            SiteConfig = new SiteConfig
+            {
+                RootDirectory = tempDir,
+                OutputDirectory = buildDir
+            },
+            Verbose = true
+        };
+
+        try
+        {
+            using (TestHelpers.SuppressConsoleOutput())
+            {
+                var stringWriter = new StringWriter();
+                Console.SetOut(stringWriter);
+
+                // Act
+                await new PublicAssetsCopyProcessor().ProcessAsync(context);
+
+                // Assert
+                var output = stringWriter.ToString();
+                // When copying from subdirectory, it logs relative to that subdirectory
+                output.ShouldContain("Copied: logo.png");
+            }
+        }
+        finally
+        {
+            Console.SetOut(new StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true });
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task ProcessAsync_WithoutVerboseFlag_DoesNotLog()
+    {
+        // Arrange
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        
+        var publicDir = Path.Combine(tempDir, "public");
+        Directory.CreateDirectory(publicDir);
+        
+        var buildDir = Path.Combine(tempDir, "build");
+        Directory.CreateDirectory(buildDir);
+        
+        var cssFile = Path.Combine(publicDir, "style.css");
+        await File.WriteAllTextAsync(cssFile, "body { color: red; }");
+
+        var context = new SiteGenerationContext
+        {
+            SiteConfig = new SiteConfig
+            {
+                RootDirectory = tempDir,
+                OutputDirectory = buildDir
+            },
+            Verbose = false
+        };
+
+        try
+        {
+            using (TestHelpers.SuppressConsoleOutput())
+            {
+                var stringWriter = new StringWriter();
+                Console.SetOut(stringWriter);
+
+                // Act
+                await new PublicAssetsCopyProcessor().ProcessAsync(context);
+
+                // Assert
+                var output = stringWriter.ToString();
+                output.ShouldNotContain("Copying public assets");
+                output.ShouldNotContain("Copied:");
+                output.ShouldNotContain("file(s)");
+            }
+        }
+        finally
+        {
+            Console.SetOut(new StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true });
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task ProcessAsync_WithVerboseFlag_LogsCorrectFileCount()
+    {
+        // Arrange
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        
+        var publicDir = Path.Combine(tempDir, "public");
+        Directory.CreateDirectory(publicDir);
+        
+        var buildDir = Path.Combine(tempDir, "build");
+        Directory.CreateDirectory(buildDir);
+        
+        var cssFile = Path.Combine(publicDir, "style.css");
+        await File.WriteAllTextAsync(cssFile, "body { color: red; }");
+        
+        var jsFile = Path.Combine(publicDir, "script.js");
+        await File.WriteAllTextAsync(jsFile, "console.log('test');");
+        
+        var imagesDir = Path.Combine(publicDir, "images");
+        Directory.CreateDirectory(imagesDir);
+        var imageFile = Path.Combine(imagesDir, "logo.png");
+        await File.WriteAllTextAsync(imageFile, "fake image");
+
+        var context = new SiteGenerationContext
+        {
+            SiteConfig = new SiteConfig
+            {
+                RootDirectory = tempDir,
+                OutputDirectory = buildDir
+            },
+            Verbose = true
+        };
+
+        try
+        {
+            using (TestHelpers.SuppressConsoleOutput())
+            {
+                var stringWriter = new StringWriter();
+                Console.SetOut(stringWriter);
+
+                // Act
+                await new PublicAssetsCopyProcessor().ProcessAsync(context);
+
+                // Assert
+                var output = stringWriter.ToString();
+                output.ShouldContain("Copied 3 file(s)");
+            }
+        }
+        finally
+        {
+            Console.SetOut(new StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true });
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task ProcessAsync_WithVerboseFlag_StillCopiesFiles()
+    {
+        // Arrange
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        
+        var publicDir = Path.Combine(tempDir, "public");
+        Directory.CreateDirectory(publicDir);
+        
+        var buildDir = Path.Combine(tempDir, "build");
+        Directory.CreateDirectory(buildDir);
+        
+        var cssFile = Path.Combine(publicDir, "style.css");
+        await File.WriteAllTextAsync(cssFile, "body { color: red; }");
+
+        var context = new SiteGenerationContext
+        {
+            SiteConfig = new SiteConfig
+            {
+                RootDirectory = tempDir,
+                OutputDirectory = buildDir
+            },
+            Verbose = true
+        };
+
+        try
+        {
+            using (TestHelpers.SuppressConsoleOutput())
+            {
+                // Act
+                await new PublicAssetsCopyProcessor().ProcessAsync(context);
+            }
+
+            // Assert - Files should still be copied regardless of verbose flag
+            var copiedCss = Path.Combine(buildDir, "style.css");
+            File.Exists(copiedCss).ShouldBeTrue();
+            context.CopiedPublicFiles.ShouldBe(1);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
 }

@@ -5,7 +5,7 @@ namespace Genny.Tests.Services.PageProcessing;
 
 public class PlaceholderReplacementProcessorTests
 {
-    private static PageProcessingContext CreateContext(string content, string pageBody = "", string pageTitle = "")
+    private static PageProcessingContext CreateContext(string content, string pageBody = "", string pageTitle = "", bool verbose = false)
     {
         return new PageProcessingContext
         {
@@ -21,7 +21,8 @@ public class PlaceholderReplacementProcessorTests
             CurrentEpoch = "1734201600",
             Permalink = "/test.html",
             RootDirectory = "/test",
-            IncludedPartials = []
+            IncludedPartials = [],
+            Verbose = verbose
         };
     }
 
@@ -180,5 +181,110 @@ public class PlaceholderReplacementProcessorTests
 
         // Assert
         result.ShouldBeSameAs(context);
+    }
+
+    [Fact]
+    public async Task ProcessAsync_WithVerboseFlagAndReplacements_LogsReplacementCount()
+    {
+        // Arrange
+        var processor = new PlaceholderReplacementProcessor();
+        var context = CreateContext("{{ title }} {{ site.name }}", pageTitle: "Title", verbose: true);
+
+        using (TestHelpers.SuppressConsoleOutput())
+        {
+            var stringWriter = new StringWriter();
+            Console.SetOut(stringWriter);
+
+            // Act
+            await processor.ProcessAsync(context);
+
+            // Assert
+            var output = stringWriter.ToString();
+            output.ShouldContain("Replaced");
+            output.ShouldContain("placeholder(s)");
+        }
+    }
+
+    [Fact]
+    public async Task ProcessAsync_WithVerboseFlagAndNoReplacements_DoesNotLog()
+    {
+        // Arrange
+        var processor = new PlaceholderReplacementProcessor();
+        var context = CreateContext("No placeholders here", verbose: true);
+
+        using (TestHelpers.SuppressConsoleOutput())
+        {
+            var stringWriter = new StringWriter();
+            Console.SetOut(stringWriter);
+
+            // Act
+            await processor.ProcessAsync(context);
+
+            // Assert
+            var output = stringWriter.ToString();
+            output.ShouldNotContain("Replaced");
+            output.ShouldNotContain("placeholder(s)");
+        }
+    }
+
+    [Fact]
+    public async Task ProcessAsync_WithoutVerboseFlag_DoesNotLog()
+    {
+        // Arrange
+        var processor = new PlaceholderReplacementProcessor();
+        var context = CreateContext("{{ title }} {{ site.name }}", pageTitle: "Title", verbose: false);
+
+        using (TestHelpers.SuppressConsoleOutput())
+        {
+            var stringWriter = new StringWriter();
+            Console.SetOut(stringWriter);
+
+            // Act
+            await processor.ProcessAsync(context);
+
+            // Assert
+            var output = stringWriter.ToString();
+            output.ShouldNotContain("Replaced");
+            output.ShouldNotContain("placeholder(s)");
+        }
+    }
+
+    [Fact]
+    public async Task ProcessAsync_WithVerboseFlag_LogsCorrectReplacementCount()
+    {
+        // Arrange
+        var processor = new PlaceholderReplacementProcessor();
+        var context = CreateContext(
+            "{{ title }}{{ title }}{{ site.name }}{{ year }}",
+            pageTitle: "Title",
+            verbose: true
+        );
+
+        using (TestHelpers.SuppressConsoleOutput())
+        {
+            var stringWriter = new StringWriter();
+            Console.SetOut(stringWriter);
+
+            // Act
+            await processor.ProcessAsync(context);
+
+            // Assert - Should log 4 replacements (2 title, 1 site.name, 1 year)
+            var output = stringWriter.ToString();
+            output.ShouldContain("Replaced 4 placeholder(s)");
+        }
+    }
+
+    [Fact]
+    public async Task ProcessAsync_WithVerboseFlag_StillReplacesPlaceholders()
+    {
+        // Arrange
+        var processor = new PlaceholderReplacementProcessor();
+        var context = CreateContext("{{ title }}", pageTitle: "My Title", verbose: true);
+
+        // Act
+        var result = await processor.ProcessAsync(context);
+
+        // Assert - Placeholders should still be replaced regardless of verbose flag
+        result.Content.ShouldBe("My Title");
     }
 }
